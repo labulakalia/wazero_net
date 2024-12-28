@@ -8,7 +8,9 @@ import (
 	_ "wazero_net/wasm/net"
 )
 
+func httpTest() {
 
+}
 
 
 func main() {
