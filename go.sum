@@ -1,4 +1,2 @@
 github.com/tetratelabs/wazero v1.8.2 h1:yIgLR/b2bN31bjxwXHD8a3d+BogigR952csSDdLYEv4=
 github.com/tetratelabs/wazero v1.8.2/go.mod h1:yAI0XTsMBhREkM/YDAK/zNou3GoiAce1P6+rp/wQhjs=
-tinygo.org/x/drivers v0.29.0 h1:xHuq8Fr1D/D2+1V/3d+aXufqP81/CLi1itdVbrYgrE0=
-tinygo.org/x/drivers v0.29.0/go.mod h1:q/mU8G/wz821p8xXqbkBACOlmZFDHXd//DnYnCW+dDQ=
