@@ -5,9 +5,17 @@ this project provider net/http for [wazero](https://github.com/tetratelabs/wazer
 
 [go1.24](https://tip.golang.org/doc/go1.24#wasm) will support `go:wasmexport directive` to export function
 
-## Usage
-go to [example](https://github.com/labulakalia/wazero_net/tree/main/example)
+Dial's Conn can not convert to net.TCPConn,net.UDPConn
 
-## Next Plan
-- [ ] add unit test for net/http
-- [ ] add ci for all platform,like windows,macos,linux,andriod,ios
+## Example
+
+```
+cd example
+GOOS=wasip1 GOARCH=wasm go build -o http.wasm http.go
+GOOS=wasip1 GOARCH=wasm go build -o net.wasm net.go
+go run example.go
+```
+
+## TODO
+- [ ] support listen ip
+- [ ] add unit test

@@ -16,13 +16,13 @@ import (
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 )
 
-//go:generate bash -c "GOOS=wasip1 GOARCH=wasm go build -o example.wasm wasm.go"
+//go:embed http.wasm
+var httpWasm []byte
 
-//go:embed example.wasm
-var exampleWasm []byte
+//go:embed net.wasm
+var netWasm []byte
 
 func main() {
-
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	// go startListen()
 	ctx := context.Background()
@@ -42,15 +42,14 @@ func main() {
 		WithSysNanosleep().
 		WithSysNanotime().
 		WithSysWalltime()
-	mod, err := r.InstantiateWithConfig(ctx, exampleWasm, conf)
+	_, err = r.InstantiateWithConfig(ctx, httpWasm, conf)
 	if err != nil {
 		log.Panicln(err)
 	}
-	// mod.ExportedFunction("httpget").Call(ctx)
-	mod = mod
-	// httpGet := mod.ExportedFunction("httpsGet")
-	// _,err = httpGet.Call(ctx)
-	// fmt.Println(err)
+	_, err = r.InstantiateWithConfig(ctx, netWasm, conf)
+	if err != nil {
+		log.Panicln(err)
+	}
 }
 
 func startListen() {
