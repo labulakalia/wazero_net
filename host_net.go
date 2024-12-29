@@ -418,57 +418,6 @@ func (h *HostNet) listener_addr(_ context.Context, m api.Module,
 	return 0
 }
 
-func (h *HostNet) http_get(_ context.Context, m api.Module,
-	urlPtr, urlLen uint64) uint64 {
-	conf := &tls.Config{}
-	// //TLS connection
-	tlsCon, err := tls.Dial("tcp4", "www.baidu.com:443", conf)
-	if err != nil {
-		fmt.Println("SSL Error : " + err.Error())
-		return 0
-	}
-
-	defer tlsCon.Close()
-	fmt.Println(tlsCon.NetConn().RemoteAddr())
-	state := tlsCon.ConnectionState()
-	fmt.Println("SSL ServerName : " + state.ServerName)
-	fmt.Println("SSL Handshake : ", state.HandshakeComplete)
-
-	// fmt.Println(tlsCon.Handshake())
-
-	request := "GET / HTTP/1.1\r\nHost: www.baidu.com\r\n\r\n"
-	n, err := io.WriteString(tlsCon, request)
-	if err != nil {
-		fmt.Println("SSL Write error :", err.Error(), n)
-	}
-	data := make([]byte, 65535)
-	for {
-		fmt.Println("start read")
-		n, err = tlsCon.Read(data)
-		fmt.Println("err", err)
-		if err != nil {
-			break
-		}
-		if n == 0 {
-			break
-		}
-		fmt.Println(data[n-1], []byte("\n"))
-		if data[n-1] == 10 {
-			break
-		}
-		// fmt.Printf("%s", data[:n])
-	}
-	conn, err := tls.Dial("tcp", "www.baidu.com:443", nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fmt.Println(len([]byte(conn.RemoteAddr().String())))
-	// fmt.Println(conn.Write([]byte("hello")))
-	conn.Close()
-
-	return 0
-}
-
 
 func (h *HostNet) round_trip(_ context.Context, m api.Module,
 	reqPtr, reqLen,respLenPtr uint64) uint64 {
