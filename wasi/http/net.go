@@ -6,6 +6,4 @@ import (
 
 func init() {
 	http.DefaultClient.Transport = &Transport{}
-
-
 }

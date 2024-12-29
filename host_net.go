@@ -23,8 +23,9 @@ import (
 
 func init() {
 	go func() {
-		fmt.Println("pprof listen 0.0.0.0:19971")
-	    log.Fatalln(http.ListenAndServe("0.0.0.0:19971", nil))
+		addr := ":19972"
+		slog.Info("pprof listen","addr",addr)
+	    log.Fatalln(http.ListenAndServe(addr, nil))
 	  }()
 }
 
@@ -103,6 +104,7 @@ func (h *HostNet) conn_dial(_ context.Context, m api.Module,
 		slog.Error("dial failed", "err", err)
 		return errcode.ERR_CONN_DIAL
 	}
+	conn.(*net.TCPConn).File()
 	newConnId := h.storeConn(conn)
 
 	ok := m.Memory().WriteUint64Le(uint32(connIdPtr), newConnId)
@@ -210,7 +212,7 @@ func (h *HostNet) conn_read(_ context.Context, m api.Module,
 
 func (h *HostNet) conn_write(_ context.Context, m api.Module,
 	connId, bPtr, bLen, nPtr uint64) uint64 {
-	slog.Error("conn_write", "connId", connId)
+	slog.Debug("conn_write", "connId", connId)
 	bytes, err := ReadBytes(m, uint32(bPtr), uint32(bLen))
 	if err != nil {
 		slog.Error("read bytes failed", "err", err)

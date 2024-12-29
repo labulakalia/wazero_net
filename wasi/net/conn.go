@@ -11,7 +11,7 @@ import (
 
 // TODO Dial add timeout or ctx
 func Dial(network, address string) (*Conn, error) {
-	slog.Debug("dial", "network", network, "address", address)
+	slog.Debug("[WASI] dial", "network", network, "address", address)
 	var id uint64
 	networkPtr := util.StringToPtr(&network)
 	addressPtr := util.StringToPtr(&address)
@@ -26,7 +26,7 @@ func Dial(network, address string) (*Conn, error) {
 }
 
 func DialTls(network, address string) (*Conn, error) {
-	slog.Debug("dial tls", "network", network, "address", address)
+	slog.Debug("[WASI] dial tls", "network", network, "address", address)
 	var id uint64
 	networkPtr := util.StringToPtr(&network)
 	addressPtr := util.StringToPtr(&address)
@@ -56,7 +56,7 @@ type Conn struct {
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
-	slog.Debug("conn read", "network", c.network, "id", c.id, "len", len(b))
+	slog.Debug("[WASI] conn read", "network", c.network, "id", c.id, "len", len(b))
 	var n uint64
 	bPtr := util.BytesToPtr(b)
 	ret := conn_read(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n))
@@ -67,27 +67,29 @@ func (c *Conn) Read(b []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	time.Sleep(time.Millisecond)
 	return int(n), nil
 }
 
 func (c *Conn) Write(b []byte) (int, error) {
-	slog.Debug("conn write", "network", c.network, "id", c.id, "len", len(b))
+	slog.Debug("[WASI] conn write", "network", c.network, "id", c.id, "len", len(b))
 	var n uint64
 	bPtr := util.BytesToPtr(b)
 	err := util.RetUint64ToError(conn_write(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n)))
 	if err != nil {
 		return 0, err
 	}
+	time.Sleep(time.Millisecond)
 	return int(n), nil
 }
 
 func (c *Conn) Close() error {
-	slog.Debug("conn close", "network", c.network, "id", c.id)
+	slog.Debug("[WASI] conn close", "network", c.network, "id", c.id)
 	return util.RetUint64ToError(conn_close(c.id))
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
-	slog.Debug("conn remote addr", "network", c.network, "id", c.id)
+	slog.Debug("[WASI] conn remote addr", "network", c.network, "id", c.id)
 	// TODO check data size is enough
 	data := util.MemPool.Get().([]byte)
 	defer func() {
@@ -118,7 +120,7 @@ func (c *Conn) RemoteAddr() net.Addr {
 	return addr
 }
 func (c *Conn) LocalAddr() net.Addr {
-	slog.Debug("conn local addr", "network", c.network, "id", c.id)
+	slog.Debug("[WASI] conn local addr", "network", c.network, "id", c.id)
 	data := util.MemPool.Get().([]byte)
 	defer func() {
 		data = data[0:0]
@@ -148,15 +150,15 @@ func (c *Conn) LocalAddr() net.Addr {
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
-	slog.Debug("set dead line addr", "network", c.network, "id", c.id, "time", t)
+	slog.Debug("[WASI] set dead line addr", "network", c.network, "id", c.id, "time", t)
 	return util.RetUint64ToError(conn_set_dead_line(c.id, uint64(t.Unix())))
 }
 func (c *Conn) SetReadDeadline(t time.Time) error {
-	slog.Debug("set read dead line addr", "network", c.network, "id", c.id, "time", t)
+	slog.Debug("[WASI] set read dead line addr", "network", c.network, "id", c.id, "time", t)
 	return util.RetUint64ToError(conn_set_read_dead_line(c.id, uint64(t.Unix())))
 }
 func (c *Conn) SetWriteDeadline(t time.Time) error {
-	slog.Debug("set write dead line addr", "network", c.network, "id", c.id, "time", t)
+	slog.Debug("[WASI] set write dead line addr", "network", c.network, "id", c.id, "time", t)
 	return util.RetUint64ToError(conn_set_write_dead_line(c.id, uint64(t.Unix())))
 }
 
@@ -166,7 +168,7 @@ type Listener struct {
 }
 
 func Listen(network string, address string) (*Listener, error) {
-	slog.Debug("listen", "network", network, "address", address)
+	slog.Debug("[WASI] listen", "network", network, "address", address)
 	var id uint64
 	networkPtr := util.StringToPtr(&network)
 	addressPtr := util.StringToPtr(&address)
@@ -182,7 +184,7 @@ func Listen(network string, address string) (*Listener, error) {
 
 // Accept waits for and returns the next connection to the listener.
 func (l *Listener) Accept() (net.Conn, error) {
-	slog.Debug("listen accept", "id", l.id, "network", l.network)
+	slog.Debug("[WASI] listen accept", "id", l.id, "network", l.network)
 	var connId uint64
 	err := util.RetUint64ToError(listener_accept(l.id, util.Uint64ToPtr(&connId)))
 	if err != nil {
@@ -194,13 +196,13 @@ func (l *Listener) Accept() (net.Conn, error) {
 // Close closes the listener.
 // Any blocked Accept operations will be unblocked and return errors.
 func (l *Listener) Close() error {
-	slog.Debug("listen close", "id", l.id, "network", l.network)
+	slog.Debug("[WASI] listen close", "id", l.id, "network", l.network)
 	return util.RetUint64ToError(listener_close(l.id))
 }
 
 // Addr returns the listener's network address.
 func (l *Listener) Addr() net.Addr {
-	slog.Debug("addr", "id", l.id, "network", l.network)
+	slog.Debug("[WASI] addr", "id", l.id, "network", l.network)
 	data := util.MemPool.Get().([]byte)
 	defer func() {
 		data = data[0:0]

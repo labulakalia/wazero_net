@@ -4,8 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	_ "embed"
-	"errors"
-	"io"
+	"fmt"
 	"log"
 	"log/slog"
 	"net"
@@ -23,11 +22,21 @@ var httpWasm []byte
 var netWasm []byte
 
 func main() {
+	conn,err := net.Dial("tcp", "1.1.1.1:80")
+	if err != nil {
+		slog.Error("Instantiate failed", "err", err)
+		return
+	}
+	f,err := conn.(*net.TCPConn).File()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(f.Fd())
+	return
 	slog.SetLogLoggerLevel(slog.LevelDebug)
-	// go startListen()
 	ctx := context.Background()
 	r := wazero.NewRuntime(ctx)
-	_, err := wazero_net.InitFuncExport(r).Instantiate(ctx)
+	_, err = wazero_net.InitFuncExport(r).Instantiate(ctx)
 	if err != nil {
 		slog.Error("Instantiate failed", "err", err)
 		return
@@ -46,47 +55,8 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
-	_, err = r.InstantiateWithConfig(ctx, netWasm, conf)
-	if err != nil {
-		log.Panicln(err)
-	}
-}
-
-func startListen() {
-	lis, err := net.Listen("tcp", "0.0.0.0:19971")
-	if err != nil {
-		slog.Error("listen failed", "err", err)
-		return
-	}
-	slog.Info("start listen", "addr", lis.Addr())
-	for {
-		conn, err := lis.Accept()
-		if err != nil {
-			slog.Error("accept failed", "err", err)
-			continue
-		}
-		data := make([]byte, 1024)
-		for {
-			slog.Info("wait read")
-			n, err := conn.Read(data)
-			if err != nil {
-				if errors.Is(err, io.EOF) {
-					slog.Info("read success")
-					return
-				}
-				slog.Error("read failed", "err", err)
-				return
-			}
-			slog.Info("read success", "data", string(data[:n]))
-			wn, err := conn.Write(data[:n])
-			if err != nil {
-				slog.Error("write failed", "err", err)
-				return
-			}
-			if wn != n {
-				slog.Error("read count not equal", "rn", wn, "n", n)
-				break
-			}
-		}
-	}
+	// _, err = r.InstantiateWithConfig(ctx, netWasm, conf)
+	// if err != nil {
+	// 	log.Panicln(err)
+	// }
 }
