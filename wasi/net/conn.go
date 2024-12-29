@@ -9,6 +9,7 @@ import (
 	"wazero_net/util"
 )
 
+// TODO Dial add timeout or ctx
 func Dial(network, address string) (*Conn, error) {
 	slog.Debug("dial", "network", network, "address", address)
 	var id uint64
@@ -24,9 +25,32 @@ func Dial(network, address string) (*Conn, error) {
 	return &Conn{id: uint64(id), network: network}, nil
 }
 
+func DialTls(network, address string) (*Conn, error) {
+	slog.Debug("dial tls", "network", network, "address", address)
+	var id uint64
+	networkPtr := util.StringToPtr(&network)
+	addressPtr := util.StringToPtr(&address)
+	ret := conn_dial_tls(networkPtr, uint64(len(network)),
+		addressPtr, uint64(len(address)),
+		util.Uint64ToPtr(&id))
+	if ret != 0 {
+		return nil, util.RetUint64ToError(ret)
+	}
+
+	return &Conn{id: uint64(id), network: network}, nil
+}
+
+// net/http/transport.go:1714
+func (c *Conn) Handshake() error {
+	return util.RetUint64ToError(conn_tls_handshake(c.id))
+}
+
+// set tc.ConnectionState() tlsState
+
 var _ net.Conn = &Conn{}
 
 type Conn struct {
+	*net.TCPConn
 	id      uint64
 	network string
 }
@@ -37,7 +61,7 @@ func (c *Conn) Read(b []byte) (int, error) {
 	bPtr := util.BytesToPtr(b)
 	ret := conn_read(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n))
 	if ret == errcode.ERR_CONN_READ_IO_EOF {
-		return 0, io.EOF
+		return int(n), io.EOF
 	}
 	err := util.RetUint64ToError(ret)
 	if err != nil {
@@ -65,10 +89,10 @@ func (c *Conn) Close() error {
 func (c *Conn) RemoteAddr() net.Addr {
 	slog.Debug("conn remote addr", "network", c.network, "id", c.id)
 	// TODO check data size is enough
-	data := memPool.Get().([]byte)
+	data := util.MemPool.Get().([]byte)
 	defer func() {
 		data = data[0:0]
-		memPool.Put(data)
+		util.MemPool.Put(data)
 	}()
 	dataPtr := util.BytesToPtr(data)
 	dataLength := uint64(len(data))
@@ -95,10 +119,10 @@ func (c *Conn) RemoteAddr() net.Addr {
 }
 func (c *Conn) LocalAddr() net.Addr {
 	slog.Debug("conn local addr", "network", c.network, "id", c.id)
-	data := memPool.Get().([]byte)
+	data := util.MemPool.Get().([]byte)
 	defer func() {
 		data = data[0:0]
-		memPool.Put(data)
+		util.MemPool.Put(data)
 	}()
 	dataPtr := util.BytesToPtr(data)
 	dataLen := uint64(len(data))
@@ -177,10 +201,10 @@ func (l *Listener) Close() error {
 // Addr returns the listener's network address.
 func (l *Listener) Addr() net.Addr {
 	slog.Debug("addr", "id", l.id, "network", l.network)
-	data := memPool.Get().([]byte)
+	data := util.MemPool.Get().([]byte)
 	defer func() {
 		data = data[0:0]
-		memPool.Put(data)
+		util.MemPool.Put(data)
 	}()
 	dataPtr := util.BytesToPtr(data)
 	dataLen := uint64(len(data))
@@ -204,4 +228,9 @@ func (l *Listener) Addr() net.Addr {
 		}
 	}
 	return addr
+}
+
+func HttpGet(url string) {
+	urlPtr := util.StringToPtr(&url)
+	http_get(urlPtr, uint64(len(url)))
 }
