@@ -23,6 +23,7 @@ func main() {
 
 	ctx := context.Background()
 	r := wazero.NewRuntime(ctx)
+	defer r.Close(ctx)
 	_, err := wazero_net.InitFuncExport(r).Instantiate(ctx)
 	if err != nil {
 		slog.Error("Instantiate failed", "err", err)
@@ -42,10 +43,17 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
-	httpsMod.ExportedFunction("https_get").Call(ctx)
+	_, err = httpsMod.ExportedFunction("https_get").Call(ctx)
+	if err != nil {
+		log.Panicln(err)
+	}
+
 	netMod, err := r.InstantiateWithConfig(ctx, netWasm, conf)
 	if err != nil {
 		log.Panicln(err)
 	}
-	netMod.ExportedFunction("net_dial").Call(ctx)
+	_, err = netMod.ExportedFunction("net_dial").Call(ctx)
+	if err != nil {
+		log.Panicln(err)
+	}
 }

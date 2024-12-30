@@ -6,11 +6,10 @@ import (
 	"github.com/tetratelabs/wazero/api"
 )
 
-
 func ReadBytes(m api.Module, offset, byteCount uint32) ([]byte, error) {
 	bytes, ok := m.Memory().Read(offset, byteCount)
 	if !ok {
-		return nil, fmt.Errorf("read mem failed offset:%d count:%d",offset,byteCount)
+		return nil, fmt.Errorf("read mem failed offset:%d count:%d", offset, byteCount)
 	}
 	return bytes, nil
 }
@@ -36,7 +35,6 @@ func ReadBytes(m api.Module, offset, byteCount uint32) ([]byte, error) {
 // 	}
 // 	return dataPtr, nil
 // }
-
 
 // func ErrorToRetUint64(m api.Module,err error) uint64 {
 // 	if err == nil {

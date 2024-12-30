@@ -8,7 +8,6 @@ import (
 	"net/url"
 )
 
-
 type Response struct {
 	StatusCode int    // e.g. 200
 	Proto      string // e.g. "HTTP/1.0"
@@ -17,37 +16,26 @@ type Response struct {
 
 	Header http.Header
 
-
 	Body []byte
 
-
 	ContentLength int64
-
 }
 
-
-
-
-
-func (r *Response)ToHttpResponse() *http.Response {
+func (r *Response) ToHttpResponse() *http.Response {
 	return &http.Response{
-		Status: http.StatusText(r.StatusCode),
-		StatusCode: r.StatusCode,
-		Proto: r.Proto,
-		ProtoMajor: r.ProtoMajor,
-		ProtoMinor: r.ProtoMinor,
-		Header: r.Header,
-		Body: io.NopCloser(bytes.NewBuffer(r.Body)),
+		Status:        http.StatusText(r.StatusCode),
+		StatusCode:    r.StatusCode,
+		Proto:         r.Proto,
+		ProtoMajor:    r.ProtoMajor,
+		ProtoMinor:    r.ProtoMinor,
+		Header:        r.Header,
+		Body:          io.NopCloser(bytes.NewBuffer(r.Body)),
 		ContentLength: r.ContentLength,
 	}
 }
 
-
-
 type Request struct {
-
 	Method string
-
 
 	URL *url.URL
 
@@ -80,7 +68,7 @@ type Request struct {
 	Pattern string
 }
 
-func (r *Request)ToHttpRequest() (req *http.Request) {
+func (r *Request) ToHttpRequest() (req *http.Request) {
 	req = &http.Request{}
 	req.Method = r.Method
 	req.URL = r.URL
@@ -91,7 +79,7 @@ func (r *Request)ToHttpRequest() (req *http.Request) {
 	if r.Body != nil {
 		req.Body = io.NopCloser(bytes.NewBuffer(r.Body))
 	}
-	req.ContentLength =  r.ContentLength
+	req.ContentLength = r.ContentLength
 	req.TransferEncoding = r.TransferEncoding
 	req.Host = r.Host
 	req.Form = r.Form
@@ -102,7 +90,7 @@ func (r *Request)ToHttpRequest() (req *http.Request) {
 	return req
 }
 
-func (r *Request)ParseHttpRequest(req *http.Request) error {
+func (r *Request) ParseHttpRequest(req *http.Request) error {
 	r.Method = req.Method
 	r.URL = req.URL
 	r.Proto = req.Proto
@@ -110,13 +98,13 @@ func (r *Request)ParseHttpRequest(req *http.Request) error {
 	r.ProtoMinor = req.ProtoMinor
 	r.Header = req.Header
 	if req.Body != nil {
-		bodyBytes,err := io.ReadAll(req.Body)
+		bodyBytes, err := io.ReadAll(req.Body)
 		if err != nil {
 			return err
 		}
 		r.Body = bodyBytes
 	}
-	r.ContentLength =  req.ContentLength
+	r.ContentLength = req.ContentLength
 	r.TransferEncoding = req.TransferEncoding
 	r.Host = req.Host
 	r.Form = req.Form

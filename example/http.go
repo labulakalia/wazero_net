@@ -1,28 +1,16 @@
 package main
 
 import (
-	"context"
 	"io"
 	"log/slog"
-	"net"
 
 	"net/http"
-	// _ "wazero_net/wasi/http"
-	wazero_net "wazero_net/wasi/net"
+	_ "wazero_net/wasi/http"
 )
 
 //go:wasmexport https_get
 func https_get() {
-	http.DefaultTransport.(*http.Transport).DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-
-		conn, err := wazero_net.Dial(network, addr)
-		if err != nil {
-			return nil, err
-		}
-		slog.Info("start dial", "addr", conn.RemoteAddr())
-		return conn, nil
-	}
-	req, err := http.NewRequest(http.MethodGet, "http://192.168.123.53:8000", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://www.baidu.com", nil)
 	if err != nil {
 		slog.Error("new request failed", "err", err)
 		return
