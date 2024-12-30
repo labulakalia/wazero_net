@@ -1,4 +1,4 @@
-module wazero_net
+module github.com/labulakalia/wazero_net
 
 go 1.23.4
 

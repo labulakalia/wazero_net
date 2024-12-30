@@ -2,7 +2,8 @@ package util
 
 import (
 	"unsafe"
-	"wazero_net/errcode"
+
+	"github.com/labulakalia/wazero_net/errcode"
 )
 
 func BytesToUint32Arr(bytes []byte) []uint32 {
@@ -46,25 +47,21 @@ func StringToBytes(s *string) []byte {
 	return unsafe.Slice(unsafe.StringData(*s), len(*s))
 }
 
-
-
-
-func StringToPtr(s *string)uint64 {
+func StringToPtr(s *string) uint64 {
 	return uint64(uintptr(unsafe.Pointer(unsafe.StringData(*s))))
 }
 
-func PtrToString(ptr uint32,ptrLen uint32) string {
+func PtrToString(ptr uint32, ptrLen uint32) string {
 	return unsafe.String((*byte)(unsafe.Pointer(uintptr(ptr))), int(ptrLen))
 }
 
-func BytesToPtr(bytes []byte)uint64 {
+func BytesToPtr(bytes []byte) uint64 {
 	return uint64(uintptr(unsafe.Pointer(&bytes[0])))
 }
 
-func PtrToBytes(ptr uint32,ptrLen uint32) []byte {
+func PtrToBytes(ptr uint32, ptrLen uint32) []byte {
 	return unsafe.Slice((*byte)(unsafe.Pointer(uintptr(ptr))), int(ptrLen))
 }
-
 
 func Uint64ToPtr(u64 *uint64) uint64 {
 	return uint64(uintptr(unsafe.Pointer(u64)))
@@ -74,14 +71,12 @@ func Uint32ToPtr(u32 *uint32) uint64 {
 	return uint64(uintptr(unsafe.Pointer(u32)))
 }
 
-
-
-func Uint64ToUint32(u64 uint64) (uint32,uint32) {
-	return uint32(u64 >> 32), uint32(u64 & (1 << 32-1))
+func Uint64ToUint32(u64 uint64) (uint32, uint32) {
+	return uint32(u64 >> 32), uint32(u64 & (1<<32 - 1))
 }
 
-func Uint32ToUint64(n1u32 uint32,n2u32 uint32) uint64 {
-	return uint64(uint64(n1u32) << 32)+uint64(n2u32)
+func Uint32ToUint64(n1u32 uint32, n2u32 uint32) uint64 {
+	return uint64(uint64(n1u32)<<32) + uint64(n2u32)
 }
 
 func RetUint64ToError(u64 uint64) error {
