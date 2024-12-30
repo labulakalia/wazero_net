@@ -7,7 +7,7 @@ this project provider net/http for [wazero](https://github.com/tetratelabs/wazer
 
 ## Install
 ```
-go get github.com/labulakalia/wazero_net@v0.0.2
+go get github.com/labulakalia/wazero_net@v0.0.3
 ```
 
 ## Example
