@@ -1,17 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 
 	"net/http"
 
+	"github.com/labulakalia/wazero_net/util"
 	_ "github.com/labulakalia/wazero_net/wasi/http"
+	_ "github.com/labulakalia/wazero_net/wasi/malloc"
 )
 
 //go:wasmexport https_get
-func https_get() {
-	req, err := http.NewRequest(http.MethodGet, "https://www.baidu.com", nil)
+func https_get(urlPtr, length uint64) {
+	url := util.PtrToString(uint32(urlPtr), uint32(length))
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		slog.Error("new request failed", "err", err)
 		return
@@ -33,7 +37,7 @@ func https_get() {
 		slog.Error("read failed", "err", err)
 		return
 	}
-	slog.Info("get resp", "data", string(bytes))
+	fmt.Println(string(bytes))
 }
 
 func main() {}

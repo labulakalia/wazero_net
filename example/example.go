@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	_ "embed"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -44,10 +45,19 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
-	_, err = httpsMod.ExportedFunction("https_get").Call(ctx)
+	malloc := httpsMod.ExportedFunction("malloc")
+	url := "https://httpbin.org/get"
+	result, err := malloc.Call(ctx, uint64(len(url)))
 	if err != nil {
 		log.Panicln(err)
 	}
+	httpsMod.Memory().Write(uint32(result[0]), []byte(url))
+
+	_, err = httpsMod.ExportedFunction("https_get").Call(ctx, result[0], uint64(len(url)))
+	if err != nil {
+		log.Panicln(err)
+	}
+	fmt.Println(httpsMod.ExportedFunctionDefinitions())
 
 	netMod, err := r.InstantiateWithConfig(ctx, netWasm, conf)
 	if err != nil {

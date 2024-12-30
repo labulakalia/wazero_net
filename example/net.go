@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	_ "github.com/labulakalia/wazero_net/wasi/malloc"
 	"github.com/labulakalia/wazero_net/wasi/net"
 )
 
@@ -25,7 +26,7 @@ func net_dial() {
 		return
 	}
 	data := make([]byte, 1024)
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 10; i++ {
 		slog.Info("start write")
 		n, err := conn.Write([]byte("hello"))
 		if err != nil {
