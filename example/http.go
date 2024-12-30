@@ -11,22 +11,23 @@ import (
 	wazero_net "wazero_net/wasi/net"
 )
 
-func main() {
+//go:wasmexport https_get
+func https_get() {
 	http.DefaultTransport.(*http.Transport).DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 
-		conn,err := wazero_net.Dial(network, addr)
+		conn, err := wazero_net.Dial(network, addr)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
-		slog.Info("start dial", "addr",conn.RemoteAddr())
-		return conn,nil
+		slog.Info("start dial", "addr", conn.RemoteAddr())
+		return conn, nil
 	}
-	req,err := http.NewRequest(http.MethodGet, "http://192.168.123.53:8000", nil)
+	req, err := http.NewRequest(http.MethodGet, "http://192.168.123.53:8000", nil)
 	if err != nil {
 		slog.Error("new request failed", "err", err)
 		return
 	}
-	resp,err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		slog.Error("http get failed", "err", err)
 		return
@@ -45,3 +46,5 @@ func main() {
 	}
 	slog.Info("get resp", "data", string(bytes))
 }
+
+func main() {}

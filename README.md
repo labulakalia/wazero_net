@@ -8,12 +8,20 @@ this project provider net/http for [wazero](https://github.com/tetratelabs/wazer
 Dial's Conn can not convert to net.TCPConn,net.UDPConn
 
 ## Example
+> must use version >= go1.24
+
+#### Install Required Go Version
+```
+go install golang.org/dl/go1.24rc1@latest
+go1.24rc1 download
+
+```
 
 ```
 cd example
-GOOS=wasip1 GOARCH=wasm go build -o http.wasm http.go
-GOOS=wasip1 GOARCH=wasm go build -o net.wasm net.go
-go run example.go
+GOOS=wasip1 GOARCH=wasm go1.24rc1 build -o http.wasm http.go
+GOOS=wasip1 GOARCH=wasm go1.24rc1 build -o net.wasm net.go
+go1.24rc1 run example.go
 ```
 
 ## TODO
