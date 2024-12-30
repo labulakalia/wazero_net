@@ -5,8 +5,9 @@ import (
 	"log/slog"
 	"net"
 	"time"
-	"wazero_net/errcode"
-	"wazero_net/util"
+
+	"github.com/labulakalia/wazero_net/errcode"
+	"github.com/labulakalia/wazero_net/util"
 )
 
 // TODO Dial add timeout or ctx

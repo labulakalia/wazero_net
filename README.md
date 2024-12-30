@@ -5,6 +5,11 @@ this project provider net/http for [wazero](https://github.com/tetratelabs/wazer
 
 > Dial's Conn can not convert to net.TCPConn,net.UDPConn
 
+## Install
+```
+go get github.com/labulakalia/wazero_net@v0.0.2
+```
+
 ## Example
 > must use go version >= go1.24, because [go1.24](https://tip.golang.org/doc/go1.24#wasm) will support `go:wasmexport directive` to export function
 
@@ -13,6 +18,7 @@ this project provider net/http for [wazero](https://github.com/tetratelabs/wazer
 go install golang.org/dl/go1.24rc1@latest
 go1.24rc1 download
 ```
+
 ```
 cd example
 GOOS=wasip1 GOARCH=wasm go1.24rc1 build -buildmode=c-shared -o http.wasm http.go

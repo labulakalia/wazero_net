@@ -7,7 +7,8 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"wazero_net"
+
+	"github.com/labulakalia/wazero_net"
 
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"

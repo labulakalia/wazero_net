@@ -5,7 +5,8 @@ import (
 	"io"
 	"log/slog"
 	"time"
-	"wazero_net/wasi/net"
+
+	"github.com/labulakalia/wazero_net/wasi/net"
 )
 
 //go:wasmexport net_dial
