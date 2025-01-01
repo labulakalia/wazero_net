@@ -1,13 +1,11 @@
 ## WAZERO NET
 this project provider net/http for [wazero](https://github.com/tetratelabs/wazero), it not belong to wazero's official project
 
->note: unsupport tinygo, because tinygo's gc has some [problem](https://github.com/tetratelabs/proxy-wasm-go-sdk/issues/450#issuecomment-2253729297) for wasm
-
 > Dial's Conn can not convert to net.TCPConn,net.UDPConn
 
 ## Install
 ```
-go get github.com/labulakalia/wazero_net@v0.0.3
+go get github.com/labulakalia/wazero_net@v0.0.4
 ```
 
 ## Example
@@ -27,8 +25,8 @@ go1.24rc1 run example.go
 ```
 
 ## Todo
-- [ ] support listen ip
+- [ ] support ip,unix addr
 - [ ] add unit test
 
-## Some Limit or Bug
-[sleep](https://github.com/labulakalia/wazero_net/blob/main/example/net.go#L76) [sleep2](https://github.com/labulakalia/wazero_net/blob/main/example/net.go#L34) need call on multi goroutine syscall, or goroutinue can no scheduler,this is bug [example code](https://github.com/golang/go/issues/65178#issuecomment-2565148315)
+## Some Limit
+https://go.dev/blog/wasi#limitations, this is [example code](https://github.com/golang/go/issues/65178#issuecomment-2565148315)
