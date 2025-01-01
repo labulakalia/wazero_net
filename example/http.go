@@ -9,7 +9,6 @@ import (
 
 	"github.com/labulakalia/wazero_net/util"
 	_ "github.com/labulakalia/wazero_net/wasi/http"
-	_ "github.com/labulakalia/wazero_net/wasi/malloc"
 )
 
 //go:wasmexport https_get
