@@ -12,16 +12,13 @@ go get github.com/labulakalia/wazero_net@v0.0.4
 > must use go version >= go1.24, because [go1.24](https://tip.golang.org/doc/go1.24#wasm) will support `go:wasmexport directive` to export function
 
 > Install Required Go Version
-```
-go install golang.org/dl/go1.24rc1@latest
-go1.24rc1 download
-```
+>= 1.24
 
 ```
 cd example
-GOOS=wasip1 GOARCH=wasm go1.24rc1 build -buildmode=c-shared -o http.wasm http.go
-GOOS=wasip1 GOARCH=wasm go1.24rc1 build -buildmode=c-shared -o net.wasm net.go
-go1.24rc1 run example.go
+GOOS=wasip1 GOARCH=wasm go build -buildmode=c-shared -o http.wasm http.go
+GOOS=wasip1 GOARCH=wasm go build -buildmode=c-shared -o net.wasm net.go
+go run example.go
 ```
 
 ## Todo

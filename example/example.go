@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/rand"
 	_ "embed"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/labulakalia/wazero_net"
 	"github.com/tetratelabs/wazero"
@@ -22,13 +24,27 @@ var httpWasm []byte
 func main() {
 
 	ctx := context.Background()
-	r := wazero.NewRuntime(ctx)
+	now := time.Now()
+	// add wasm cache
+	cacheDir := os.TempDir()
+	os.MkdirAll(cacheDir, 0755)
+	fmt.Println("cache dir", cacheDir)
+	cache, err := wazero.NewCompilationCacheWithDir(cacheDir)
+	if err != nil {
+		log.Panicln(err)
+	}
+	rConfig := wazero.NewRuntimeConfig().
+		WithCompilationCache(cache)
+
+	r := wazero.NewRuntimeWithConfig(ctx, rConfig)
 	defer r.Close(ctx)
-	_, err := wazero_net.InitFuncExport(r).Instantiate(ctx)
+	_, err = wazero_net.InitFuncExport(r).Instantiate(ctx)
 	if err != nil {
 		slog.Error("Instantiate failed", "err", err)
 		return
 	}
+
+	defer cache.Close(ctx)
 
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
 	conf := wazero.NewModuleConfig().
@@ -44,12 +60,12 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
-	log.Println("start init module")
+
 	httpsMod, err := r.InstantiateModule(ctx, cm, conf)
 	if err != nil {
 		log.Panicln(err)
 	}
-	log.Println("start init module ok ")
+	log.Println("start init module ok ", time.Now().Sub(now))
 	malloc := httpsMod.ExportedFunction("malloc")
 
 	url := "https://httpbin.org/get"

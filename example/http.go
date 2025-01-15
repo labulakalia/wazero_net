@@ -5,6 +5,8 @@ import (
 	"log"
 	"log/slog"
 
+	"net/http"
+	_ "net/http"
 	"net/url"
 
 	"github.com/labulakalia/wazero_net/model"
@@ -16,6 +18,8 @@ var isRun = false
 
 //go:wasmexport https_get
 func https_get(urlPtr, length uint64) {
+	client := http.Client{}
+	client = client
 	fmt.Println("is run", isRun)
 	isRun = true
 
