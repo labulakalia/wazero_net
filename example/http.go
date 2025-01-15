@@ -2,41 +2,36 @@ package main
 
 import (
 	"fmt"
-	"io"
+	"log"
 	"log/slog"
 
-	"net/http"
+	"net/url"
 
+	"github.com/labulakalia/wazero_net/model"
 	"github.com/labulakalia/wazero_net/util"
-	_ "github.com/labulakalia/wazero_net/wasi/http"
+	wasihttp "github.com/labulakalia/wazero_net/wasi/http"
 )
 
 //go:wasmexport https_get
 func https_get(urlPtr, length uint64) {
-	url := util.PtrToString(uint32(urlPtr), uint32(length))
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	geturl := util.PtrToString(uint32(urlPtr), uint32(length))
+	fmt.Println("start http get")
+	slog.Info("get url", "url", geturl)
+	u, err := url.Parse(geturl)
 	if err != nil {
-		slog.Error("new request failed", "err", err)
-		return
+		log.Panicln("parse url failed", err)
 	}
-	resp, err := http.DefaultClient.Do(req)
+	slog.Info("get url", "url", u)
+	u = u
+	resp, err := wasihttp.Do(&model.Request{
+		Method: "GET",
+		URL:    u,
+	})
+	slog.Info("get url", "url", err)
 	if err != nil {
-		slog.Error("http get failed", "err", err)
-		return
+		log.Panicln("do failed", err)
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		slog.Error("http status code failed", "status", resp.Status)
-		return
-	}
-	slog.Info("http resp", "header", resp.Header)
-	bytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		slog.Error("read failed", "err", err)
-		return
-	}
-	fmt.Println(string(bytes))
+	fmt.Println("resp", resp)
 }
 
 func main() {}

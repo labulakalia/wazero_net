@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -38,8 +37,6 @@ type HostNet struct {
 	listenerLock sync.RWMutex
 	listenerId   uint64
 	listenerMap  map[uint64]net.Listener
-
-	httpResp map[uint64][]byte
 }
 
 func (h *HostNet) getConn(connId uint64) (net.Conn, error) {
@@ -187,12 +184,13 @@ func (h *HostNet) conn_read(_ context.Context, m api.Module,
 	}
 	slog.Info("read", "connId", connId)
 	n, err := conn.Read(bytes)
-	fmt.Println("read", err)
-	if n > 0 {
-		if bytes[n-1] == 10 {
-			return errcode.ERR_CONN_READ_IO_EOF
-		}
-	}
+
+	// if n > 0 {
+	// 	if bytes[n-1] == 10 {
+	// 		slog.Info("read eof")
+	// 		return errcode.ERR_CONN_READ_IO_EOF
+	// 	}
+	// }
 
 	if err != nil {
 		if errors.Is(err, io.EOF) {
@@ -285,14 +283,20 @@ func (h *HostNet) conn_local_addr(_ context.Context, m api.Module,
 		slog.Error("conn not exist", "connId", connId)
 		return errcode.ERR_CONN_NOT_EXIST
 	}
-	remoteAddr := conn.LocalAddr().String()
-	data, err := ReadBytes(m, uint32(addrPtr), uint32(addrLenPtr))
+	localAddr := conn.LocalAddr().String()
+	fmt.Println(localAddr)
+	length, ok := m.Memory().ReadUint64Le(uint32(addrLenPtr))
+	if !ok {
+		slog.Error("read u64 failed", "err", err)
+		return errcode.ERR_READ_MEM
+	}
+	data, err := ReadBytes(m, uint32(addrPtr), uint32(length))
 	if err != nil {
 		slog.Error("read bytes failed", "err", err)
 		return errcode.ERR_READ_MEM
 	}
-	copy(data, util.StringToBytes(&remoteAddr))
-	ok := m.Memory().WriteUint64Le(uint32(addrLenPtr), uint64(len(remoteAddr)))
+	copy(data, util.StringToBytes(&localAddr))
+	ok = m.Memory().WriteUint64Le(uint32(addrLenPtr), uint64(len(localAddr)))
 	if !ok {
 		return errcode.ERR_WRITE_MEM
 	}
@@ -417,65 +421,5 @@ func (h *HostNet) listener_addr(_ context.Context, m api.Module,
 	if !ok {
 		return errcode.ERR_WRITE_MEM
 	}
-	return 0
-}
-
-func (h *HostNet) round_trip(_ context.Context, m api.Module,
-	reqPtr, reqLen, respLenPtr uint64) uint64 {
-	reqBytes, err := ReadBytes(m, uint32(reqPtr), uint32(reqLen))
-	if err != nil {
-		slog.Error("listener not found", "err", err)
-		return errcode.ERR_READ_MEM
-	}
-	req := Request{}
-	err = json.Unmarshal(reqBytes, &req)
-	if err != nil {
-		slog.Error("json unmarshal failed", "err", err)
-		return errcode.ERR_READ_MEM
-	}
-
-	resp, err := http.DefaultTransport.RoundTrip(req.ToHttpRequest())
-	if err != nil {
-		slog.Error("client roundtrip failed", "err", err)
-		return errcode.ERR_READ_MEM
-	}
-	defer resp.Body.Close()
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		slog.Error("read all failed", "err", err)
-		return errcode.ERR_READ_MEM
-	}
-
-	rResp := Response{
-		StatusCode:    resp.StatusCode,
-		Proto:         resp.Proto,
-		ProtoMajor:    resp.ProtoMajor,
-		ProtoMinor:    resp.ProtoMinor,
-		Header:        resp.Header,
-		Body:          respBytes,
-		ContentLength: resp.ContentLength,
-	}
-	ddd, err := json.Marshal(rResp)
-	if err != nil {
-		slog.Error("json marshal failed", "err", err)
-		return errcode.ERR_READ_MEM
-	}
-	m.Memory().WriteUint64Le(uint32(respLenPtr), uint64(len(ddd)))
-	h.httpResp[uint64(len(ddd))] = ddd
-	return 0
-}
-func (h *HostNet) read_resp(_ context.Context, m api.Module,
-	dataPtr, dataLen uint64) uint64 {
-	d, ok := h.httpResp[dataLen]
-	if !ok {
-		slog.Error("not exist", "key", dataLen)
-		return errcode.ERR_READ_MEM
-	}
-	bytes, err := ReadBytes(m, uint32(dataPtr), uint32(dataLen))
-	if err != nil {
-		slog.Error("not exist", "key", dataLen)
-		return errcode.ERR_READ_MEM
-	}
-	copy(bytes, d)
 	return 0
 }

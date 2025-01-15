@@ -12,6 +12,7 @@ import (
 
 //go:wasmexport net_dial
 func net_dial() {
+	
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	lis, err := net.Listen("tcp", "0.0.0.0:19971")
 	if err != nil {

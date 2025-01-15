@@ -10,7 +10,6 @@ func InitFuncExport(r wazero.Runtime) wazero.HostModuleBuilder {
 	hostNet := &HostNet{
 		connMap:     map[uint64]net.Conn{},
 		listenerMap: map[uint64]net.Listener{},
-		httpResp:    map[uint64][]byte{},
 	}
 	return r.NewHostModuleBuilder("net").
 		NewFunctionBuilder().WithFunc(hostNet.conn_dial).Export("conn_dial").
@@ -28,7 +27,6 @@ func InitFuncExport(r wazero.Runtime) wazero.HostModuleBuilder {
 		NewFunctionBuilder().WithFunc(hostNet.listener_accept).Export("listener_accept").
 		NewFunctionBuilder().WithFunc(hostNet.listener_close).Export("listener_close").
 		NewFunctionBuilder().WithFunc(hostNet.listener_addr).Export("listener_addr").
-		NewFunctionBuilder().WithFunc(hostNet.round_trip).Export("round_trip").
-		NewFunctionBuilder().WithFunc(hostNet.read_resp).Export("read_resp")
+		NewFunctionBuilder().WithFunc(hostNet.client_do).Export("client_do")
 
 }

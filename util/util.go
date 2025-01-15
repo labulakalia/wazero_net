@@ -82,3 +82,4 @@ func Uint32ToUint64(n1u32 uint32, n2u32 uint32) uint64 {
 func RetUint64ToError(u64 uint64) error {
 	return errcode.ToError(u64)
 }
+

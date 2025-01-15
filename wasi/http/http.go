@@ -2,42 +2,33 @@ package http
 
 import (
 	"encoding/json"
-	"net/http"
+	"log/slog"
 
-	"github.com/labulakalia/wazero_net"
+	"github.com/labulakalia/wazero_net/model"
 	"github.com/labulakalia/wazero_net/util"
+	_ "github.com/labulakalia/wazero_net/wasi/malloc"
 )
 
-type Transport struct{}
-
 // re impl this interface
-func (r *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	wr := wazero_net.Request{}
-	err := wr.ParseHttpRequest(req)
+func Do(req *model.Request) (*model.Response, error) {
+	reqData, err := json.Marshal(req)
 	if err != nil {
-		return nil, err
-	}
-	reqData, err := json.Marshal(wr)
-	if err != nil {
+		slog.Error("marshal failed", "err", err)
 		return nil, err
 	}
 	// TODO wasm limit mem 4096M
 	reqDataLen := len(reqData)
-	var respLength uint64
-	err = util.RetUint64ToError(round_trip(util.BytesToPtr(reqData), uint64(reqDataLen), util.Uint64ToPtr(&respLength)))
-	if err != nil {
-		return nil, err
-	}
-	respData := make([]byte, respLength)
-	err = util.RetUint64ToError(read_resp(util.BytesToPtr(respData), respLength))
-	if err != nil {
-		return nil, err
-	}
 
-	resp := wazero_net.Response{}
-	err = json.Unmarshal(respData, &resp)
+	ret := client_do(util.BytesToPtr(reqData), uint64(reqDataLen))
+
+	dataPtr, dataLen := util.Uint64ToUint32(ret)
+	respData := util.PtrToBytes(dataPtr, dataLen)
+	slog.Info("re", "respData", string(respData))
+	resp := &model.Response{}
+	err = json.Unmarshal(respData, resp)
 	if err != nil {
+		slog.Info("unmarshal failed", "err", err)
 		return nil, err
 	}
-	return resp.ToHttpResponse(), nil
+	return resp, nil
 }
