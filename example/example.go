@@ -40,15 +40,40 @@ func main() {
 		WithSysNanosleep().
 		WithSysNanotime().
 		WithSysWalltime()
-	httpsMod, err := r.InstantiateWithConfig(ctx, httpWasm, conf)
+	cm, err := r.CompileModule(context.Background(), httpWasm)
 	if err != nil {
 		log.Panicln(err)
 	}
-
+	log.Println("start init module")
+	httpsMod, err := r.InstantiateModule(ctx, cm, conf)
+	if err != nil {
+		log.Panicln(err)
+	}
+	log.Println("start init module ok ")
 	malloc := httpsMod.ExportedFunction("malloc")
 
 	url := "https://httpbin.org/get"
 	result, err := malloc.Call(ctx, uint64(len(url)))
+	if err != nil {
+		log.Fatalln("malloc", err)
+	}
+	httpsMod.Memory().Write(uint32(result[0]), []byte(url))
+
+	_, err = httpsMod.ExportedFunction("https_get").Call(ctx, result[0], uint64(len(url)))
+	if err != nil {
+		log.Fatalln("https get", err)
+	}
+
+	// call 2
+	httpsMod, err = r.InstantiateModule(ctx, cm, conf)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	malloc = httpsMod.ExportedFunction("malloc")
+
+	url = "https://httpbin.org/get"
+	result, err = malloc.Call(ctx, uint64(len(url)))
 	if err != nil {
 		log.Fatalln("malloc", err)
 	}

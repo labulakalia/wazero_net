@@ -12,8 +12,13 @@ import (
 	wasihttp "github.com/labulakalia/wazero_net/wasi/http"
 )
 
+var isRun = false
+
 //go:wasmexport https_get
 func https_get(urlPtr, length uint64) {
+	fmt.Println("is run", isRun)
+	isRun = true
+
 	geturl := util.PtrToString(uint32(urlPtr), uint32(length))
 	fmt.Println("start http get")
 	slog.Info("get url", "url", geturl)
