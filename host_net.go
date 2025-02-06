@@ -257,7 +257,7 @@ func (h *HostNet) conn_remote_addr(_ context.Context, m api.Module,
 		return errcode.ERR_CONN_NOT_EXIST
 	}
 	remoteAddr := conn.RemoteAddr().String()
-	fmt.Println("remoteAddr", remoteAddr)
+
 	length, ok := m.Memory().ReadUint64Le(uint32(addrLenPtr))
 	if !ok {
 		slog.Error("read u64 failed", "err", err)
