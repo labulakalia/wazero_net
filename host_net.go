@@ -24,7 +24,7 @@ import (
 func init() {
 	go func() {
 		addr := ":19972"
-		slog.Info("pprof listen", "addr", addr)
+		slog.Debug("pprof listen", "addr", addr)
 		log.Fatalln(http.ListenAndServe(addr, nil))
 	}()
 }
@@ -136,7 +136,7 @@ func (h *HostNet) conn_dial_tls(_ context.Context, m api.Module,
 		return errcode.ERR_CONN_DIAL_TLS
 	}
 	newConnId := h.storeConn(conn)
-	slog.Info("tls dial", "r", conn.RemoteAddr())
+	slog.Debug("tls dial", "r", conn.RemoteAddr())
 	ok := m.Memory().WriteUint64Le(uint32(connIdPtr), newConnId)
 	if !ok {
 		slog.Error("store conn failed", "newConnId", newConnId)
@@ -164,13 +164,13 @@ func (h *HostNet) conn_tls_handshake(_ context.Context, m api.Module,
 		slog.Error("hand shake failed", "connId", connId)
 		return errcode.ERR_CONN_TLS_HANDSHAKE
 	}
-	slog.Info("HandshakeContext")
+
 	return 0
 }
 
 func (h *HostNet) conn_read(_ context.Context, m api.Module,
 	connId, bPtr, bLen, nPtr uint64) uint64 {
-	slog.Info("conn_read", "connId", connId)
+	slog.Debug("conn_read", "connId", connId)
 	bytes, err := ReadBytes(m, uint32(bPtr), uint32(bLen))
 	if err != nil {
 		slog.Error("read bytes failed", "err", err)
@@ -182,7 +182,7 @@ func (h *HostNet) conn_read(_ context.Context, m api.Module,
 		slog.Error("conn not exist failed", "connId", connId)
 		return errcode.ERR_CONN_NOT_EXIST
 	}
-	slog.Info("read", "connId", connId)
+	slog.Debug("read", "connId", connId)
 	n, err := conn.Read(bytes)
 
 	// if n > 0 {

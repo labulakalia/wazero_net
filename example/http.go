@@ -1,3 +1,5 @@
+//go:build wasip1
+
 package main
 
 import (
@@ -6,9 +8,11 @@ import (
 	"log/slog"
 
 	"net/http"
-	_ "net/http"
 	"net/url"
+	"os"
+	"syscall"
 
+	_ "github.com/labulakalia/plugin_api"
 	"github.com/labulakalia/wazero_net/model"
 	"github.com/labulakalia/wazero_net/util"
 	wasihttp "github.com/labulakalia/wazero_net/wasi/http"
@@ -18,6 +22,20 @@ var isRun = false
 
 //go:wasmexport https_get
 func https_get(urlPtr, length uint64) {
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		panic(err)
+	}
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			panic(err)
+		}
+		if info.Sys() != nil {
+			fmt.Println(info.Sys().(*syscall.Stat_t).Atime / 1000000)
+		}
+	}
+	return
 	client := http.Client{}
 	client = client
 	fmt.Println("is run", isRun)

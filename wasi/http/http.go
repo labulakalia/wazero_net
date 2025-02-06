@@ -23,11 +23,10 @@ func Do(req *model.Request) (*model.Response, error) {
 
 	dataPtr, dataLen := util.Uint64ToUint32(ret)
 	respData := util.PtrToBytes(dataPtr, dataLen)
-	slog.Info("re", "respData", string(respData))
 	resp := &model.Response{}
 	err = json.Unmarshal(respData, resp)
 	if err != nil {
-		slog.Info("unmarshal failed", "err", err)
+		slog.Error("unmarshal failed", "err", err)
 		return nil, err
 	}
 	return resp, nil

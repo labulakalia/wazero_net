@@ -47,6 +47,7 @@ func main() {
 	defer cache.Close(ctx)
 
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
+
 	conf := wazero.NewModuleConfig().
 		WithStartFunctions("_initialize").
 		WithStdout(os.Stdout).
@@ -55,7 +56,8 @@ func main() {
 		WithRandSource(rand.Reader).
 		WithSysNanosleep().
 		WithSysNanotime().
-		WithSysWalltime()
+		WithSysWalltime().
+		WithFS(os.DirFS(`D:\`))
 	cm, err := r.CompileModule(context.Background(), httpWasm)
 	if err != nil {
 		log.Panicln(err)
@@ -65,6 +67,9 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
+	fmt.Println(httpsMod.ExportedFunctionDefinitions())
+	fmt.Println(httpsMod.ExportedFunction("plugin_api_schema").Call(context.Background()))
+	return
 	log.Println("start init module ok ", time.Now().Sub(now))
 	malloc := httpsMod.ExportedFunction("malloc")
 

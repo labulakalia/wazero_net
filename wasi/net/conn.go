@@ -59,7 +59,7 @@ type Conn struct {
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
-	slog.Info("[WASI] conn read", "network", c.network, "id", c.id, "len", len(b))
+	slog.Debug("[WASI] conn read", "network", c.network, "id", c.id, "len", len(b))
 	var n uint64
 	bPtr := util.BytesToPtr(b)
 	ret := conn_read(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n))
@@ -70,13 +70,13 @@ func (c *Conn) Read(b []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	slog.Info("read success","n",n)
+	slog.Debug("read success","n",n)
 	time.Sleep(time.Millisecond)
 	return int(n), nil
 }
 
 func (c *Conn) Write(b []byte) (int, error) {
-	slog.Info("[WASI] conn write", "network", c.network, "id", c.id, "len", len(b))
+	slog.Debug("[WASI] conn write", "network", c.network, "id", c.id, "len", len(b))
 	var n uint64
 	bPtr := util.BytesToPtr(b)
 	err := util.RetUint64ToError(conn_write(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n)))
@@ -93,7 +93,7 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
-	slog.Info("[WASI] conn remote addr", "network", c.network, "id", c.id)
+	slog.Debug("[WASI] conn remote addr", "network", c.network, "id", c.id)
 	// TODO check data size is enough
 	data := util.MemPool.Get().([]byte)
 	defer func() {
@@ -124,7 +124,7 @@ func (c *Conn) RemoteAddr() net.Addr {
 	return addr
 }
 func (c *Conn) LocalAddr() net.Addr {
-	slog.Info("[WASI] conn local addr", "network", c.network, "id", c.id)
+	slog.Debug("[WASI] conn local addr", "network", c.network, "id", c.id)
 	data := util.MemPool.Get().([]byte)
 	defer func() {
 		util.MemPool.Put(data)
