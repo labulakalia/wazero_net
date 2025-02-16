@@ -64,6 +64,7 @@ func main() {
 			log.Panicln(err)
 		}
 		netMod.ExportedFunction("dial").Call(context.Background())
+		netMod.ExportedFunction("net_dial").Call(context.Background())
 	} else if os.Args[1] == "http" {
 		netWasm, err := os.ReadFile("http.wasm")
 		if err != nil {
@@ -90,5 +91,20 @@ func main() {
 		if err != nil {
 			log.Fatalln("https get", err)
 		}
+	} else if os.Args[1] == "ftp" {
+		ftpWasm, err := os.ReadFile("ftp.wasm")
+		if err != nil {
+			log.Panicln(err)
+		}
+		cm, err := r.CompileModule(context.Background(), ftpWasm)
+		if err != nil {
+			log.Panicln(err)
+		}
+		netMod, err := r.InstantiateModule(ctx, cm, conf)
+		if err != nil {
+			log.Panicln(err)
+		}
+
+		netMod.ExportedFunction("ftp_connect").Call(context.Background())
 	}
 }

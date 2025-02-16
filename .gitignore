@@ -1,2 +1,1 @@
-example/net.wasm
-example/http.wasm
+example/*.wasm

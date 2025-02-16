@@ -2,6 +2,7 @@ package net
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"time"
@@ -63,7 +64,11 @@ func (c *Conn) Read(b []byte) (int, error) {
 	ret := conn_read(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n))
 	err := util.RetUint64ToError(ret)
 	if err != nil {
-		return 0, err
+		if err.Error() == "EOF" {
+			return int(n), io.EOF
+		} else {
+			return 0, err
+		}
 	}
 	slog.Debug("read success", "n", n)
 	time.Sleep(time.Millisecond)
