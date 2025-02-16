@@ -99,6 +99,7 @@ func (c *Conn) RemoteAddr() net.Addr {
 	dataLength := uint64(len(data))
 	err := util.RetUint64ToError(conn_remote_addr(c.id, dataPtr, util.Uint64ToPtr(&dataLength)))
 	if err != nil {
+		slog.Error("remote addr failed", "err", err)
 		return nil
 	}
 
@@ -108,11 +109,13 @@ func (c *Conn) RemoteAddr() net.Addr {
 	case "tcp":
 		addr, err = net.ResolveTCPAddr(c.network, util.BytesToString(data[:dataLength]))
 		if err != nil {
+			slog.Error("resolve tcp failed", "err", err)
 			return nil
 		}
 	case "udp":
 		addr, err = net.ResolveUDPAddr(c.network, util.BytesToString(data[:dataLength]))
 		if err != nil {
+			slog.Error("resolve udp failed", "err", err)
 			return nil
 		}
 	}

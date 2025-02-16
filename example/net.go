@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"time"
@@ -83,11 +84,12 @@ func startListen(lis *net.Listener) {
 
 //go:wasmexport dial
 func dial() {
-	conn, err := net.Dial("tcp", "127.0.0.1:21")
+	conn, err := net.Dial("tcp", "127.0.0.1:2121")
 	if err != nil {
 		slog.Error("wasm dial failed", "err", err)
 		return
 	}
+	fmt.Println(conn.RemoteAddr())
 	conn.Close()
 }
 

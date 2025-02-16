@@ -79,5 +79,8 @@ func Uint32ToUint64(n1u32 uint32, n2u32 uint32) uint64 {
 }
 
 func RetUint64ToError(u64 uint64) error {
+	if u64 == 0 {
+		return nil
+	}
 	return errors.New(PtrToString(Uint64ToUint32(u64)))
 }
