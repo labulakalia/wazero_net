@@ -3,11 +3,10 @@ package wazero_net
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 
-	"github.com/labulakalia/wazero_net/errcode"
 	"github.com/labulakalia/wazero_net/model"
 	"github.com/labulakalia/wazero_net/util"
 	"github.com/tetratelabs/wazero/api"
@@ -17,26 +16,22 @@ func (h *HostNet) client_do(_ context.Context, m api.Module,
 	reqPtr, reqLen uint64) uint64 {
 	reqBytes, err := ReadBytes(m, uint32(reqPtr), uint32(reqLen))
 	if err != nil {
-		slog.Error("listener not found", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 	req := &model.Request{}
 	err = json.Unmarshal(reqBytes, req)
 	if err != nil {
-		slog.Error("json unmarshal failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 
 	resp, err := http.DefaultClient.Do(toHttpRequest(req))
 	if err != nil {
-		slog.Error("client roundtrip failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 	defer resp.Body.Close()
 	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		slog.Error("read all failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 
 	rResp := model.Response{
@@ -50,15 +45,16 @@ func (h *HostNet) client_do(_ context.Context, m api.Module,
 	}
 	respData, err := json.Marshal(rResp)
 	if err != nil {
-		slog.Error("json marshal failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 	malloc := m.ExportedFunction("malloc")
 	result, err := malloc.Call(context.Background(), uint64(len(respData)))
 	if err != nil {
-		slog.Error("malloc call failed", "err", err)
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, err)
 	}
-	m.Memory().Write(uint32(result[0]), respData)
+	ok := m.Memory().Write(uint32(result[0]), respData)
+	if !ok {
+		return ErrorToUint64(m, errors.New("write resp data failed"))
+	}
 	return util.Uint32ToUint64(uint32(result[0]), uint32(len(respData)))
 }

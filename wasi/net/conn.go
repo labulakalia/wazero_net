@@ -2,12 +2,10 @@ package net
 
 import (
 	"fmt"
-	"io"
 	"log/slog"
 	"net"
 	"time"
 
-	"github.com/labulakalia/wazero_net/errcode"
 	"github.com/labulakalia/wazero_net/util"
 	_ "github.com/labulakalia/wazero_net/wasi/malloc"
 )
@@ -63,14 +61,11 @@ func (c *Conn) Read(b []byte) (int, error) {
 	var n uint64
 	bPtr := util.BytesToPtr(b)
 	ret := conn_read(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n))
-	if ret == errcode.ERR_CONN_READ_IO_EOF {
-		return int(n), io.EOF
-	}
 	err := util.RetUint64ToError(ret)
 	if err != nil {
 		return 0, err
 	}
-	slog.Debug("read success","n",n)
+	slog.Debug("read success", "n", n)
 	time.Sleep(time.Millisecond)
 	return int(n), nil
 }
@@ -134,7 +129,7 @@ func (c *Conn) LocalAddr() net.Addr {
 	dataLen := uint64(len(data))
 	err := util.RetUint64ToError(conn_local_addr(c.id, dataPtr, util.Uint64ToPtr(&dataLen)))
 	if err != nil {
-		slog.Error("read local addr failed","err",err)
+		slog.Error("read local addr failed", "err", err)
 		return nil
 	}
 

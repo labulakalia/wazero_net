@@ -6,28 +6,15 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io"
-	"log"
-	"log/slog"
 	"net"
-	"net/http"
 	_ "net/http/pprof"
 	"sync"
 	"time"
 
-	"github.com/labulakalia/wazero_net/errcode"
 	"github.com/labulakalia/wazero_net/util"
 
 	"github.com/tetratelabs/wazero/api"
 )
-
-func init() {
-	go func() {
-		addr := ":19972"
-		slog.Debug("pprof listen", "addr", addr)
-		log.Fatalln(http.ListenAndServe(addr, nil))
-	}()
-}
 
 type HostNet struct {
 	connLock sync.RWMutex
@@ -87,27 +74,23 @@ func (h *HostNet) conn_dial(_ context.Context, m api.Module,
 	networkPtr, networkLen, addressPtr, addressLen, connIdPtr uint64) uint64 {
 	network, err := ReadBytes(m, uint32(networkPtr), uint32(networkLen))
 	if err != nil {
-		slog.Error("read bytes failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 	address, err := ReadBytes(m, uint32(addressPtr), uint32(addressLen))
 	if err != nil {
-		slog.Error("read bytes failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 
 	conn, err := net.Dial(util.BytesToString(network), util.BytesToString(address))
 	if err != nil {
-		slog.Error("dial failed", "err", err)
-		return errcode.ERR_CONN_DIAL
+		return ErrorToUint64(m, err)
 	}
 	conn.(*net.TCPConn).File()
 	newConnId := h.storeConn(conn)
 
 	ok := m.Memory().WriteUint64Le(uint32(connIdPtr), newConnId)
 	if !ok {
-		slog.Error("store conn failed", "newConnId", newConnId)
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, errors.New("write connid failed"))
 	}
 	return 0
 }
@@ -116,13 +99,11 @@ func (h *HostNet) conn_dial_tls(_ context.Context, m api.Module,
 	networkPtr, networkLen, addressPtr, addressLen, connIdPtr uint64) uint64 {
 	network, err := ReadBytes(m, uint32(networkPtr), uint32(networkLen))
 	if err != nil {
-		slog.Error("read bytes failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 	address, err := ReadBytes(m, uint32(addressPtr), uint32(addressLen))
 	if err != nil {
-		slog.Error("read bytes failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 
 	conn, err := tls.Dial(util.BytesToString(network), util.BytesToString(address), &tls.Config{
@@ -132,15 +113,13 @@ func (h *HostNet) conn_dial_tls(_ context.Context, m api.Module,
 		},
 	})
 	if err != nil {
-		slog.Error("dial failed", "err", err)
-		return errcode.ERR_CONN_DIAL_TLS
+		return ErrorToUint64(m, err)
 	}
 	newConnId := h.storeConn(conn)
-	slog.Debug("tls dial", "r", conn.RemoteAddr())
+
 	ok := m.Memory().WriteUint64Le(uint32(connIdPtr), newConnId)
 	if !ok {
-		slog.Error("store conn failed", "newConnId", newConnId)
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, errors.New("write conn id failed"))
 	}
 	return 0
 }
@@ -149,86 +128,65 @@ func (h *HostNet) conn_tls_handshake(_ context.Context, m api.Module,
 	connId uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		slog.Error("conn not exist failed", "connId", connId)
-		return errcode.ERR_CONN_NOT_EXIST
+
+		return ErrorToUint64(m, err)
 	}
 	tlsConn, ok := conn.(*tls.Conn)
 	if !ok {
-		slog.Error("not is tls conn", "connId", connId)
-		return errcode.ERR_CONN_NOT_EXIST
+		return ErrorToUint64(m, errors.New("tls conn type failed"))
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	err = tlsConn.HandshakeContext(ctx)
 	if err != nil {
-		slog.Error("hand shake failed", "connId", connId)
-		return errcode.ERR_CONN_TLS_HANDSHAKE
+		return ErrorToUint64(m, err)
 	}
-
 	return 0
 }
 
 func (h *HostNet) conn_read(_ context.Context, m api.Module,
 	connId, bPtr, bLen, nPtr uint64) uint64 {
-	slog.Debug("conn_read", "connId", connId)
 	bytes, err := ReadBytes(m, uint32(bPtr), uint32(bLen))
 	if err != nil {
-		slog.Error("read bytes failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 
 	conn, err := h.getConn(connId)
 	if err != nil {
-		slog.Error("conn not exist failed", "connId", connId)
-		return errcode.ERR_CONN_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
-	slog.Debug("read", "connId", connId)
+
 	n, err := conn.Read(bytes)
 
-	// if n > 0 {
-	// 	if bytes[n-1] == 10 {
-	// 		slog.Info("read eof")
-	// 		return errcode.ERR_CONN_READ_IO_EOF
-	// 	}
-	// }
-
 	if err != nil {
-		if errors.Is(err, io.EOF) {
-			slog.Debug("read finished")
-			m.Memory().WriteUint64Le(uint32(nPtr), uint64(n))
-			return errcode.ERR_CONN_READ_IO_EOF
-		}
-		return errcode.ERR_CONN_READ
+		return ErrorToUint64(m, err)
 	}
 
 	ok := m.Memory().WriteUint64Le(uint32(nPtr), uint64(n))
 	if !ok {
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, errors.New("write ptr failed"))
 	}
 	return 0
 }
 
 func (h *HostNet) conn_write(_ context.Context, m api.Module,
 	connId, bPtr, bLen, nPtr uint64) uint64 {
-	slog.Debug("conn_write", "connId", connId)
+
 	bytes, err := ReadBytes(m, uint32(bPtr), uint32(bLen))
 	if err != nil {
-		slog.Error("read bytes failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 	conn, err := h.getConn(connId)
 	if err != nil {
-		slog.Error("conn not exist failed", "connId", connId)
-		return errcode.ERR_CONN_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
 	n, err := conn.Write(bytes)
 	if err != nil {
-		slog.Error("write failed", "connId", connId, "err", err)
-		return errcode.ERR_CONN_WRITE
+		return ErrorToUint64(m, err)
 	}
 	ok := m.Memory().WriteUint64Le(uint32(nPtr), uint64(n))
 	if !ok {
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -237,14 +195,12 @@ func (h *HostNet) conn_close(_ context.Context, m api.Module,
 	connId uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		slog.Error("conn not exist", "connId", connId)
-		return errcode.ERR_CONN_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
 	h.delConn(connId)
 	err = conn.Close()
 	if err != nil {
-		slog.Error("close failed", "err", err)
-		return errcode.ERR_CONN_CLOSE
+		return ErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -253,25 +209,22 @@ func (h *HostNet) conn_remote_addr(_ context.Context, m api.Module,
 	connId, addrPtr, addrLenPtr uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		slog.Error("conn not exist", "connId", connId)
-		return errcode.ERR_CONN_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
 	remoteAddr := conn.RemoteAddr().String()
 
 	length, ok := m.Memory().ReadUint64Le(uint32(addrLenPtr))
 	if !ok {
-		slog.Error("read u64 failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, errors.New("read addr len failed"))
 	}
 	data, err := ReadBytes(m, uint32(addrPtr), uint32(length))
 	if err != nil {
-		slog.Error("read bytes failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 	copy(data, util.StringToBytes(&remoteAddr))
 	ok = m.Memory().WriteUint64Le(uint32(addrLenPtr), uint64(len(remoteAddr)))
 	if !ok {
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -280,25 +233,22 @@ func (h *HostNet) conn_local_addr(_ context.Context, m api.Module,
 	connId, addrPtr, addrLenPtr uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		slog.Error("conn not exist", "connId", connId)
-		return errcode.ERR_CONN_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
 	localAddr := conn.LocalAddr().String()
-	fmt.Println(localAddr)
+
 	length, ok := m.Memory().ReadUint64Le(uint32(addrLenPtr))
 	if !ok {
-		slog.Error("read u64 failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, errors.New("read addr len failed"))
 	}
 	data, err := ReadBytes(m, uint32(addrPtr), uint32(length))
 	if err != nil {
-		slog.Error("read bytes failed", "err", err)
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 	copy(data, util.StringToBytes(&localAddr))
 	ok = m.Memory().WriteUint64Le(uint32(addrLenPtr), uint64(len(localAddr)))
 	if !ok {
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, errors.New("write addr len failed"))
 	}
 	return 0
 }
@@ -307,13 +257,11 @@ func (h *HostNet) conn_set_dead_line(_ context.Context, m api.Module,
 	connId, deadline uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		slog.Error("conn not exist", "connId", connId)
-		return errcode.ERR_CONN_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
 	err = conn.SetDeadline(time.Unix(int64(deadline), 0))
 	if err != nil {
-		slog.Error("set dead line failed", "err", err)
-		return errcode.ERR_CONN_SET_DEAD_LINE
+		return ErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -322,13 +270,11 @@ func (h *HostNet) conn_set_read_dead_line(_ context.Context, m api.Module,
 	connId, deadline uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		slog.Error("conn not exist", "connId", connId)
-		return errcode.ERR_CONN_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
 	err = conn.SetReadDeadline(time.Unix(int64(deadline), 0))
 	if err != nil {
-		slog.Error("set read dead line failed", "err", err)
-		return errcode.ERR_CONN_SET_READ_DEAD_LINE
+		return ErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -337,13 +283,11 @@ func (h *HostNet) conn_set_write_dead_line(_ context.Context, m api.Module,
 	connId, deadline uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		slog.Error("conn not exist", "connId", connId)
-		return errcode.ERR_CONN_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
 	err = conn.SetWriteDeadline(time.Unix(int64(deadline), 0))
 	if err != nil {
-		slog.Error("set write dead line failed", "err", err)
-		return errcode.ERR_CONN_SET_WRITE_DEAD_LINE
+		return ErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -352,20 +296,20 @@ func (h *HostNet) listener_listen(_ context.Context, m api.Module,
 	networkPtr, networkLen, addressPtr, addressLen, listenerIdPtr uint64) uint64 {
 	network, err := ReadBytes(m, uint32(networkPtr), uint32(networkLen))
 	if err != nil {
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 	address, err := ReadBytes(m, uint32(addressPtr), uint32(addressLen))
 	if err != nil {
-		return errcode.ERR_READ_MEM
+		return ErrorToUint64(m, err)
 	}
 	lis, err := net.Listen(util.BytesToString(network), util.BytesToString(address))
 	if err != nil {
-		return errcode.ERR_LISTEN
+		return ErrorToUint64(m, err)
 	}
 	listenerId := h.storeListner(lis)
 	ok := m.Memory().WriteUint64Le(uint32(listenerIdPtr), listenerId)
 	if !ok {
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, errors.New("write listen id failed"))
 	}
 	return 0
 }
@@ -374,18 +318,16 @@ func (h *HostNet) listener_accept(_ context.Context, m api.Module,
 	listenerId, connIdPtr uint64) uint64 {
 	listener, err := h.getListner(listenerId)
 	if err != nil {
-		slog.Error("listener not found", "listenerId", listenerId)
-		return errcode.ERR_LISTENER_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
 	conn, err := listener.Accept()
 	if err != nil {
-		slog.Error("accept failed", "err", err)
-		return errcode.ERR_LISTENER_ACCEPT
+		return ErrorToUint64(m, err)
 	}
 	connId := h.storeConn(conn)
 	ok := m.Memory().WriteUint64Le(uint32(connIdPtr), connId)
 	if !ok {
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, errors.New("write conn id failed"))
 	}
 	return 0
 }
@@ -394,13 +336,11 @@ func (h *HostNet) listener_close(_ context.Context, m api.Module,
 	listenerId uint64) uint64 {
 	listener, err := h.getListner(listenerId)
 	if err != nil {
-		slog.Error("listener not found", "listenerId", listenerId)
-		return errcode.ERR_LISTENER_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
 	err = listener.Close()
 	if err != nil {
-		slog.Error("listener close failed", "err", err)
-		return errcode.ERR_LISTENER_CLOSE
+		return ErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -409,17 +349,16 @@ func (h *HostNet) listener_addr(_ context.Context, m api.Module,
 	listenerId, addrPtr, addrLenPtr uint64) uint64 {
 	listener, err := h.getListner(listenerId)
 	if err != nil {
-		slog.Error("listener not found", "listenerId", listenerId)
-		return errcode.ERR_LISTENER_NOT_EXIST
+		return ErrorToUint64(m, err)
 	}
 	addr := listener.Addr().String()
 	ok := m.Memory().Write(uint32(addrPtr), util.StringToBytes(&addr))
 	if !ok {
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, errors.New("write addr failed"))
 	}
 	ok = m.Memory().WriteUint64Le(uint32(addrLenPtr), uint64(len(addr)))
 	if !ok {
-		return errcode.ERR_WRITE_MEM
+		return ErrorToUint64(m, errors.New("write addr len failed"))
 	}
 	return 0
 }

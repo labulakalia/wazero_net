@@ -4,31 +4,23 @@ import (
 	"context"
 	"crypto/rand"
 	_ "embed"
-	"fmt"
 	"log"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/labulakalia/wazero_net"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 )
 
-//go:embed http.wasm
-var httpWasm []byte
-
-// //go:embed net.wasm
-// var netWasm []byte
-
 func main() {
 
 	ctx := context.Background()
-	now := time.Now()
+
 	// add wasm cache
 	cacheDir := os.TempDir()
 	os.MkdirAll(cacheDir, 0755)
-	fmt.Println("cache dir", cacheDir)
+
 	cache, err := wazero.NewCompilationCacheWithDir(cacheDir)
 	if err != nil {
 		log.Panicln(err)
@@ -56,61 +48,47 @@ func main() {
 		WithRandSource(rand.Reader).
 		WithSysNanosleep().
 		WithSysNanotime().
-		WithSysWalltime().
-		WithFS(os.DirFS(`D:\`))
-	cm, err := r.CompileModule(context.Background(), httpWasm)
-	if err != nil {
-		log.Panicln(err)
+		WithSysWalltime()
+
+	if os.Args[1] == "net" {
+		netWasm, err := os.ReadFile("net.wasm")
+		if err != nil {
+			log.Panicln(err)
+		}
+		cm, err := r.CompileModule(context.Background(), netWasm)
+		if err != nil {
+			log.Panicln(err)
+		}
+		netMod, err := r.InstantiateModule(ctx, cm, conf)
+		if err != nil {
+			log.Panicln(err)
+		}
+		netMod.ExportedFunction("dial").Call(context.Background())
+	} else if os.Args[1] == "http" {
+		netWasm, err := os.ReadFile("http.wasm")
+		if err != nil {
+			log.Panicln(err)
+		}
+		cm, err := r.CompileModule(context.Background(), netWasm)
+		if err != nil {
+			log.Panicln(err)
+		}
+
+		httpMod, err := r.InstantiateModule(ctx, cm, conf)
+		if err != nil {
+			log.Panicln(err)
+		}
+		malloc := httpMod.ExportedFunction("malloc")
+		url := "https://httpbin.org/get"
+		result, err := malloc.Call(ctx, uint64(len(url)))
+		if err != nil {
+			log.Fatalln("malloc", err)
+		}
+		httpMod.Memory().Write(uint32(result[0]), []byte(url))
+
+		_, err = httpMod.ExportedFunction("https_get").Call(ctx, result[0], uint64(len(url)))
+		if err != nil {
+			log.Fatalln("https get", err)
+		}
 	}
-
-	httpsMod, err := r.InstantiateModule(ctx, cm, conf)
-	if err != nil {
-		log.Panicln(err)
-	}
-	fmt.Println(httpsMod.ExportedFunctionDefinitions())
-	fmt.Println(httpsMod.ExportedFunction("plugin_api_schema").Call(context.Background()))
-	return
-	log.Println("start init module ok ", time.Now().Sub(now))
-	malloc := httpsMod.ExportedFunction("malloc")
-
-	url := "https://httpbin.org/get"
-	result, err := malloc.Call(ctx, uint64(len(url)))
-	if err != nil {
-		log.Fatalln("malloc", err)
-	}
-	httpsMod.Memory().Write(uint32(result[0]), []byte(url))
-
-	_, err = httpsMod.ExportedFunction("https_get").Call(ctx, result[0], uint64(len(url)))
-	if err != nil {
-		log.Fatalln("https get", err)
-	}
-
-	// call 2
-	httpsMod, err = r.InstantiateModule(ctx, cm, conf)
-	if err != nil {
-		log.Panicln(err)
-	}
-
-	malloc = httpsMod.ExportedFunction("malloc")
-
-	url = "https://httpbin.org/get"
-	result, err = malloc.Call(ctx, uint64(len(url)))
-	if err != nil {
-		log.Fatalln("malloc", err)
-	}
-	httpsMod.Memory().Write(uint32(result[0]), []byte(url))
-
-	_, err = httpsMod.ExportedFunction("https_get").Call(ctx, result[0], uint64(len(url)))
-	if err != nil {
-		log.Fatalln("https get", err)
-	}
-
-	// netMod, err := r.InstantiateWithConfig(ctx, netWasm, conf)
-	// if err != nil {
-	// 	log.Panicln(err)
-	// }
-	// _, err = netMod.ExportedFunction("net_dial").Call(ctx)
-	// if err != nil {
-	// 	log.Panicln(err)
-	// }
 }

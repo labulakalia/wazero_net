@@ -1,9 +1,8 @@
 package util
 
 import (
+	"errors"
 	"unsafe"
-
-	"github.com/labulakalia/wazero_net/errcode"
 )
 
 func BytesToUint32Arr(bytes []byte) []uint32 {
@@ -80,6 +79,5 @@ func Uint32ToUint64(n1u32 uint32, n2u32 uint32) uint64 {
 }
 
 func RetUint64ToError(u64 uint64) error {
-	return errcode.ToError(u64)
+	return errors.New(PtrToString(Uint64ToUint32(u64)))
 }
-
