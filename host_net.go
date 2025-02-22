@@ -85,7 +85,9 @@ func (h *HostNet) conn_dial(_ context.Context, m api.Module,
 	if err != nil {
 		return ErrorToUint64(m, err)
 	}
-	conn.(*net.TCPConn).File()
+	if util.BytesToString(network) == "tcp" {
+		conn.(*net.TCPConn).SetKeepAlive(true)
+	}
 	newConnId := h.storeConn(conn)
 
 	ok := m.Memory().WriteUint64Le(uint32(connIdPtr), newConnId)

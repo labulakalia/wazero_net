@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/labulakalia/wazero_net/model"
 	"github.com/labulakalia/wazero_net/util"
 	"github.com/tetratelabs/wazero/api"
 )
@@ -18,13 +17,13 @@ func (h *HostNet) client_do(_ context.Context, m api.Module,
 	if err != nil {
 		return ErrorToUint64(m, err)
 	}
-	req := &model.Request{}
+	req := &util.Request{}
 	err = json.Unmarshal(reqBytes, req)
 	if err != nil {
 		return ErrorToUint64(m, err)
 	}
 
-	resp, err := http.DefaultClient.Do(toHttpRequest(req))
+	resp, err := http.DefaultClient.Do(util.ToHttpRequest(req))
 	if err != nil {
 		return ErrorToUint64(m, err)
 	}
@@ -34,7 +33,7 @@ func (h *HostNet) client_do(_ context.Context, m api.Module,
 		return ErrorToUint64(m, err)
 	}
 
-	rResp := model.Response{
+	rResp := util.Response{
 		StatusCode:    resp.StatusCode,
 		Proto:         resp.Proto,
 		ProtoMajor:    resp.ProtoMajor,
