@@ -33,7 +33,7 @@ func https_get(urlPtr, length uint64) {
 		log.Panicln("do failed", err)
 	}
 	fmt.Println("status code", resp.StatusCode)
-	fmt.Println("body", resp.Body)
+	fmt.Println("resp", resp)
 }
 
 func main() {}

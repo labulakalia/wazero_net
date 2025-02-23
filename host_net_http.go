@@ -11,7 +11,7 @@ import (
 )
 
 func (h *HostNet) client_do(_ context.Context, m api.Module,
-	reqPtr, reqLen, respPtr, respLen uint64) uint64 {
+	reqPtr, reqLen, respPtr, respLenPtr uint64) uint64 {
 	reqBytes, err := util.HostReadBytes(m, uint32(reqPtr), uint32(reqLen))
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
@@ -49,5 +49,7 @@ func (h *HostNet) client_do(_ context.Context, m api.Module,
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
-	return util.Uint32ToUint64(uint32(ptr), uint32(len(respData)))
+	m.Memory().WriteUint64Le(uint32(respPtr), ptr)
+	m.Memory().WriteUint64Le(uint32(respLenPtr), uint64(len(respData)))
+	return 0
 }
