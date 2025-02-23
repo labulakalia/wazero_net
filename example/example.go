@@ -63,7 +63,7 @@ func main() {
 		if err != nil {
 			log.Panicln(err)
 		}
-		netMod.ExportedFunction("dial").Call(context.Background())
+		netMod.ExportedFunction("net_dial").Call(context.Background())
 		// netMod.ExportedFunction("net_dial").Call(context.Background())
 	} else if os.Args[1] == "http" {
 		netWasm, err := os.ReadFile("http.wasm")
@@ -106,5 +106,35 @@ func main() {
 		}
 
 		netMod.ExportedFunction("ftp_connect").Call(context.Background())
+	} else if os.Args[1] == "sftp" {
+		sftpWasm, err := os.ReadFile("sftp.wasm")
+		if err != nil {
+			log.Panicln(err)
+		}
+		cm, err := r.CompileModule(context.Background(), sftpWasm)
+		if err != nil {
+			log.Panicln(err)
+		}
+		netMod, err := r.InstantiateModule(ctx, cm, conf)
+		if err != nil {
+			log.Panicln(err)
+		}
+
+		netMod.ExportedFunction("sftp_connect").Call(context.Background())
+	} else if os.Args[1] == "samba" {
+		sambaWasm, err := os.ReadFile("samba.wasm")
+		if err != nil {
+			log.Panicln(err)
+		}
+		cm, err := r.CompileModule(context.Background(), sambaWasm)
+		if err != nil {
+			log.Panicln(err)
+		}
+		netMod, err := r.InstantiateModule(ctx, cm, conf)
+		if err != nil {
+			log.Panicln(err)
+		}
+
+		netMod.ExportedFunction("samba_connect").Call(context.Background())
 	}
 }
