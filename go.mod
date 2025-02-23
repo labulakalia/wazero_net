@@ -6,7 +6,7 @@ toolchain go1.24.0
 
 require (
 	github.com/jlaffaye/ftp v0.2.0
-	github.com/tetratelabs/wazero v1.8.2
+	github.com/tetratelabs/wazero v1.9.0
 )
 
 require (
