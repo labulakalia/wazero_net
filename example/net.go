@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"log/slog"
 	"time"
 
@@ -91,6 +92,13 @@ func dial() {
 	}
 	fmt.Println(conn.RemoteAddr())
 	conn.Close()
+
+	conn, err = net.Dial("tcp", "127.0.0.1:9999")
+	if err == nil {
+		log.Panicln("err should not nil")
+	}
+	fmt.Println("dial err", err)
+
 }
 
 func main() {}

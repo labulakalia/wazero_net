@@ -3,7 +3,6 @@ package wazero_net
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 
@@ -12,25 +11,25 @@ import (
 )
 
 func (h *HostNet) client_do(_ context.Context, m api.Module,
-	reqPtr, reqLen uint64) uint64 {
-	reqBytes, err := ReadBytes(m, uint32(reqPtr), uint32(reqLen))
+	reqPtr, reqLen, respPtr, respLen uint64) uint64 {
+	reqBytes, err := util.HostReadBytes(m, uint32(reqPtr), uint32(reqLen))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	req := &util.Request{}
 	err = json.Unmarshal(reqBytes, req)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 
 	resp, err := http.DefaultClient.Do(util.ToHttpRequest(req))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	defer resp.Body.Close()
 	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 
 	rResp := util.Response{
@@ -44,16 +43,11 @@ func (h *HostNet) client_do(_ context.Context, m api.Module,
 	}
 	respData, err := json.Marshal(rResp)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
-	malloc := m.ExportedFunction("malloc")
-	result, err := malloc.Call(context.Background(), uint64(len(respData)))
+	ptr, err := util.HostWriteBytes(m, respData)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
-	ok := m.Memory().Write(uint32(result[0]), respData)
-	if !ok {
-		return ErrorToUint64(m, errors.New("write resp data failed"))
-	}
-	return util.Uint32ToUint64(uint32(result[0]), uint32(len(respData)))
+	return util.Uint32ToUint64(uint32(ptr), uint32(len(respData)))
 }

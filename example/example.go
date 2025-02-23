@@ -64,7 +64,7 @@ func main() {
 			log.Panicln(err)
 		}
 		netMod.ExportedFunction("dial").Call(context.Background())
-		netMod.ExportedFunction("net_dial").Call(context.Background())
+		// netMod.ExportedFunction("net_dial").Call(context.Background())
 	} else if os.Args[1] == "http" {
 		netWasm, err := os.ReadFile("http.wasm")
 		if err != nil {
@@ -80,7 +80,7 @@ func main() {
 			log.Panicln(err)
 		}
 		malloc := httpMod.ExportedFunction("malloc")
-		url := "https://httpbin.org/get"
+		url := "http://127.0.0.1"
 		result, err := malloc.Call(ctx, uint64(len(url)))
 		if err != nil {
 			log.Fatalln("malloc", err)

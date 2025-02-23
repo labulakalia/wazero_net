@@ -1,14 +1,13 @@
-package wazero_net
+package util
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/labulakalia/wazero_net/util"
 	"github.com/tetratelabs/wazero/api"
 )
 
-func ReadBytes(m api.Module, offset, byteCount uint32) ([]byte, error) {
+func HostReadBytes(m api.Module, offset, byteCount uint32) ([]byte, error) {
 	bytes, ok := m.Memory().Read(offset, byteCount)
 	if !ok {
 		return nil, fmt.Errorf("read mem failed offset %d count %d", offset, byteCount)
@@ -16,7 +15,7 @@ func ReadBytes(m api.Module, offset, byteCount uint32) ([]byte, error) {
 	return bytes, nil
 }
 
-func WriteBytes(m api.Module, data []byte) (uint64, error) {
+func HostWriteBytes(m api.Module, data []byte) (uint64, error) {
 	if len(data) == 0 {
 		return 0, nil
 	}
@@ -36,15 +35,15 @@ func WriteBytes(m api.Module, data []byte) (uint64, error) {
 	return dataPtr, nil
 }
 
-func ErrorToUint64(m api.Module, err error) uint64 {
+func HostErrorToUint64(m api.Module, err error) uint64 {
 	if err == nil {
 		return 0
 	}
 	errStr := err.Error()
-	data := util.StringToBytes(&errStr)
-	res, err := WriteBytes(m, data)
+	data := StringToBytes(&errStr)
+	res, err := HostWriteBytes(m, data)
 	if err != nil {
 		panic(err)
 	}
-	return util.Uint32ToUint64(uint32(res), uint32(len(data)))
+	return Uint32ToUint64(uint32(res), uint32(len(data)))
 }

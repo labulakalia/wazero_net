@@ -72,18 +72,18 @@ func (h *HostNet) getListner(listenerId uint64) (net.Listener, error) {
 
 func (h *HostNet) conn_dial(_ context.Context, m api.Module,
 	networkPtr, networkLen, addressPtr, addressLen, connIdPtr uint64) uint64 {
-	network, err := ReadBytes(m, uint32(networkPtr), uint32(networkLen))
+	network, err := util.HostReadBytes(m, uint32(networkPtr), uint32(networkLen))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
-	address, err := ReadBytes(m, uint32(addressPtr), uint32(addressLen))
+	address, err := util.HostReadBytes(m, uint32(addressPtr), uint32(addressLen))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 
 	conn, err := net.Dial(util.BytesToString(network), util.BytesToString(address))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	if util.BytesToString(network) == "tcp" {
 		conn.(*net.TCPConn).SetKeepAlive(true)
@@ -92,20 +92,20 @@ func (h *HostNet) conn_dial(_ context.Context, m api.Module,
 
 	ok := m.Memory().WriteUint64Le(uint32(connIdPtr), newConnId)
 	if !ok {
-		return ErrorToUint64(m, errors.New("write connid failed"))
+		return util.HostErrorToUint64(m, errors.New("write connid failed"))
 	}
 	return 0
 }
 
 func (h *HostNet) conn_dial_tls(_ context.Context, m api.Module,
 	networkPtr, networkLen, addressPtr, addressLen, connIdPtr uint64) uint64 {
-	network, err := ReadBytes(m, uint32(networkPtr), uint32(networkLen))
+	network, err := util.HostReadBytes(m, uint32(networkPtr), uint32(networkLen))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
-	address, err := ReadBytes(m, uint32(addressPtr), uint32(addressLen))
+	address, err := util.HostReadBytes(m, uint32(addressPtr), uint32(addressLen))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 
 	conn, err := tls.Dial(util.BytesToString(network), util.BytesToString(address), &tls.Config{
@@ -115,13 +115,13 @@ func (h *HostNet) conn_dial_tls(_ context.Context, m api.Module,
 		},
 	})
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	newConnId := h.storeConn(conn)
 
 	ok := m.Memory().WriteUint64Le(uint32(connIdPtr), newConnId)
 	if !ok {
-		return ErrorToUint64(m, errors.New("write conn id failed"))
+		return util.HostErrorToUint64(m, errors.New("write conn id failed"))
 	}
 	return 0
 }
@@ -131,42 +131,42 @@ func (h *HostNet) conn_tls_handshake(_ context.Context, m api.Module,
 	conn, err := h.getConn(connId)
 	if err != nil {
 
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	tlsConn, ok := conn.(*tls.Conn)
 	if !ok {
-		return ErrorToUint64(m, errors.New("tls conn type failed"))
+		return util.HostErrorToUint64(m, errors.New("tls conn type failed"))
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	err = tlsConn.HandshakeContext(ctx)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	return 0
 }
 
 func (h *HostNet) conn_read(_ context.Context, m api.Module,
 	connId, bPtr, bLen, nPtr uint64) uint64 {
-	bytes, err := ReadBytes(m, uint32(bPtr), uint32(bLen))
+	bytes, err := util.HostReadBytes(m, uint32(bPtr), uint32(bLen))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 
 	conn, err := h.getConn(connId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 
 	n, err := conn.Read(bytes)
 
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 
 	ok := m.Memory().WriteUint64Le(uint32(nPtr), uint64(n))
 	if !ok {
-		return ErrorToUint64(m, errors.New("write ptr failed"))
+		return util.HostErrorToUint64(m, errors.New("write ptr failed"))
 	}
 	return 0
 }
@@ -174,21 +174,21 @@ func (h *HostNet) conn_read(_ context.Context, m api.Module,
 func (h *HostNet) conn_write(_ context.Context, m api.Module,
 	connId, bPtr, bLen, nPtr uint64) uint64 {
 
-	bytes, err := ReadBytes(m, uint32(bPtr), uint32(bLen))
+	bytes, err := util.HostReadBytes(m, uint32(bPtr), uint32(bLen))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	conn, err := h.getConn(connId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	n, err := conn.Write(bytes)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	ok := m.Memory().WriteUint64Le(uint32(nPtr), uint64(n))
 	if !ok {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -197,12 +197,12 @@ func (h *HostNet) conn_close(_ context.Context, m api.Module,
 	connId uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	h.delConn(connId)
 	err = conn.Close()
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -211,22 +211,22 @@ func (h *HostNet) conn_remote_addr(_ context.Context, m api.Module,
 	connId, addrPtr, addrLenPtr uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	remoteAddr := conn.RemoteAddr().String()
 
 	length, ok := m.Memory().ReadUint64Le(uint32(addrLenPtr))
 	if !ok {
-		return ErrorToUint64(m, errors.New("read addr len failed"))
+		return util.HostErrorToUint64(m, errors.New("read addr len failed"))
 	}
-	data, err := ReadBytes(m, uint32(addrPtr), uint32(length))
+	data, err := util.HostReadBytes(m, uint32(addrPtr), uint32(length))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	copy(data, util.StringToBytes(&remoteAddr))
 	ok = m.Memory().WriteUint64Le(uint32(addrLenPtr), uint64(len(remoteAddr)))
 	if !ok {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -235,22 +235,22 @@ func (h *HostNet) conn_local_addr(_ context.Context, m api.Module,
 	connId, addrPtr, addrLenPtr uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	localAddr := conn.LocalAddr().String()
 
 	length, ok := m.Memory().ReadUint64Le(uint32(addrLenPtr))
 	if !ok {
-		return ErrorToUint64(m, errors.New("read addr len failed"))
+		return util.HostErrorToUint64(m, errors.New("read addr len failed"))
 	}
-	data, err := ReadBytes(m, uint32(addrPtr), uint32(length))
+	data, err := util.HostReadBytes(m, uint32(addrPtr), uint32(length))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	copy(data, util.StringToBytes(&localAddr))
 	ok = m.Memory().WriteUint64Le(uint32(addrLenPtr), uint64(len(localAddr)))
 	if !ok {
-		return ErrorToUint64(m, errors.New("write addr len failed"))
+		return util.HostErrorToUint64(m, errors.New("write addr len failed"))
 	}
 	return 0
 }
@@ -259,11 +259,11 @@ func (h *HostNet) conn_set_dead_line(_ context.Context, m api.Module,
 	connId, deadline uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	err = conn.SetDeadline(time.Unix(int64(deadline), 0))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -272,11 +272,11 @@ func (h *HostNet) conn_set_read_dead_line(_ context.Context, m api.Module,
 	connId, deadline uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	err = conn.SetReadDeadline(time.Unix(int64(deadline), 0))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -285,33 +285,33 @@ func (h *HostNet) conn_set_write_dead_line(_ context.Context, m api.Module,
 	connId, deadline uint64) uint64 {
 	conn, err := h.getConn(connId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	err = conn.SetWriteDeadline(time.Unix(int64(deadline), 0))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	return 0
 }
 
 func (h *HostNet) listener_listen(_ context.Context, m api.Module,
 	networkPtr, networkLen, addressPtr, addressLen, listenerIdPtr uint64) uint64 {
-	network, err := ReadBytes(m, uint32(networkPtr), uint32(networkLen))
+	network, err := util.HostReadBytes(m, uint32(networkPtr), uint32(networkLen))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
-	address, err := ReadBytes(m, uint32(addressPtr), uint32(addressLen))
+	address, err := util.HostReadBytes(m, uint32(addressPtr), uint32(addressLen))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	lis, err := net.Listen(util.BytesToString(network), util.BytesToString(address))
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	listenerId := h.storeListner(lis)
 	ok := m.Memory().WriteUint64Le(uint32(listenerIdPtr), listenerId)
 	if !ok {
-		return ErrorToUint64(m, errors.New("write listen id failed"))
+		return util.HostErrorToUint64(m, errors.New("write listen id failed"))
 	}
 	return 0
 }
@@ -320,16 +320,16 @@ func (h *HostNet) listener_accept(_ context.Context, m api.Module,
 	listenerId, connIdPtr uint64) uint64 {
 	listener, err := h.getListner(listenerId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	conn, err := listener.Accept()
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	connId := h.storeConn(conn)
 	ok := m.Memory().WriteUint64Le(uint32(connIdPtr), connId)
 	if !ok {
-		return ErrorToUint64(m, errors.New("write conn id failed"))
+		return util.HostErrorToUint64(m, errors.New("write conn id failed"))
 	}
 	return 0
 }
@@ -338,11 +338,11 @@ func (h *HostNet) listener_close(_ context.Context, m api.Module,
 	listenerId uint64) uint64 {
 	listener, err := h.getListner(listenerId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	err = listener.Close()
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	return 0
 }
@@ -351,16 +351,16 @@ func (h *HostNet) listener_addr(_ context.Context, m api.Module,
 	listenerId, addrPtr, addrLenPtr uint64) uint64 {
 	listener, err := h.getListner(listenerId)
 	if err != nil {
-		return ErrorToUint64(m, err)
+		return util.HostErrorToUint64(m, err)
 	}
 	addr := listener.Addr().String()
 	ok := m.Memory().Write(uint32(addrPtr), util.StringToBytes(&addr))
 	if !ok {
-		return ErrorToUint64(m, errors.New("write addr failed"))
+		return util.HostErrorToUint64(m, errors.New("write addr failed"))
 	}
 	ok = m.Memory().WriteUint64Le(uint32(addrLenPtr), uint64(len(addr)))
 	if !ok {
-		return ErrorToUint64(m, errors.New("write addr len failed"))
+		return util.HostErrorToUint64(m, errors.New("write addr len failed"))
 	}
 	return 0
 }

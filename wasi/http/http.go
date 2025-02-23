@@ -25,11 +25,16 @@ func Do(req *http.Request) (*http.Response, error) {
 
 	// TODO wasm limit mem 4096M
 	reqDataLen := len(reqData)
+	var (
+		respPtr uint64
+		respLen uint64
+	)
+	ret := client_do(util.BytesToPtr(reqData), uint64(reqDataLen), util.Uint64ToPtr(&respPtr), util.Uint64ToPtr(&respLen))
+	if ret != 0 {
+		return nil, util.RetUint64ToError(ret)
+	}
 
-	ret := client_do(util.BytesToPtr(reqData), uint64(reqDataLen))
-
-	dataPtr, dataLen := util.Uint64ToUint32(ret)
-	respData := util.PtrToBytes(dataPtr, dataLen)
+	respData := util.PtrToBytes(uint32(respPtr), uint32(respLen))
 	resp := &util.Response{}
 	err = json.Unmarshal(respData, resp)
 	if err != nil {
