@@ -6,7 +6,7 @@ import (
 	"io"
 	"log"
 	"log/slog"
-	"time"
+	"runtime"
 
 	_ "github.com/labulakalia/wazero_net/wasi/malloc"
 	"github.com/labulakalia/wazero_net/wasi/net"
@@ -15,6 +15,8 @@ import (
 //go:wasmexport net_dial
 func net_dial() {
 
+	fmt.Println(runtime.GOMAXPROCS(10))
+	// fmt.Println()
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	lis, err := net.Listen("tcp", "0.0.0.0:19971")
 	if err != nil {
@@ -36,8 +38,8 @@ func net_dial() {
 			slog.Error("write failed", "err", err)
 		}
 		slog.Info("write success", "n", n)
-		time.Sleep(time.Millisecond) // must exist
-
+		// time.Sleep(time.Millisecond) // must exist
+		runtime.Gosched()
 		n, err = conn.Read(data)
 		if err != nil {
 			slog.Error("write failed", "err", err)
@@ -78,7 +80,8 @@ func startListen(lis *net.Listener) {
 				slog.Error("read count not equal", "rn", wn, "n", n)
 				break
 			}
-			time.Sleep(time.Millisecond) // must exist
+			runtime.Gosched()
+			// time.Sleep(time.Millisecond) // must exist
 		}
 	}
 }
