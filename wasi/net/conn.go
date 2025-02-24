@@ -58,6 +58,9 @@ type Conn struct {
 	*net.TCPConn
 	id      uint64
 	network string
+
+	readDeadline  time.Time
+	writeDeadline time.Time
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
@@ -72,6 +75,10 @@ reply:
 			return int(n), io.EOF
 		} else {
 			if strings.Contains(err.Error(), "i/o timeout") {
+				if !c.readDeadline.IsZero() && time.Now().After(c.readDeadline) {
+					c.readDeadline = time.Time{}
+					return 0, err
+				}
 				goto reply
 			}
 			return 0, err
@@ -83,6 +90,7 @@ reply:
 
 func (c *Conn) Write(b []byte) (int, error) {
 	slog.Debug("[WASI] conn write", "network", c.network, "id", c.id, "len", len(b))
+
 	var n uint64
 	bPtr := util.BytesToPtr(b)
 reply:
@@ -90,6 +98,10 @@ reply:
 	runtime.Gosched()
 	if err != nil {
 		if strings.Contains(err.Error(), "i/o timeout") {
+			if !c.writeDeadline.IsZero() && time.Now().After(c.writeDeadline) {
+				c.writeDeadline = time.Time{}
+				return 0, err
+			}
 			goto reply
 		}
 		return 0, err
@@ -101,10 +113,7 @@ reply:
 
 func (c *Conn) Close() error {
 	slog.Debug("[WASI] conn close", "network", c.network, "id", c.id)
-	time.Sleep(0)
-	defer func() {
-		time.Sleep(0)
-	}()
+
 	return util.RetUint64ToError(conn_close(c.id))
 }
 
@@ -115,10 +124,7 @@ func (c *Conn) RemoteAddr() net.Addr {
 	defer func() {
 		util.MemPool.Put(data)
 	}()
-	time.Sleep(0)
-	defer func() {
-		time.Sleep(0)
-	}()
+
 	dataPtr := util.BytesToPtr(data)
 	dataLength := uint64(len(data))
 	err := util.RetUint64ToError(conn_remote_addr(c.id, dataPtr, util.Uint64ToPtr(&dataLength)))
@@ -151,10 +157,7 @@ func (c *Conn) LocalAddr() net.Addr {
 	defer func() {
 		util.MemPool.Put(data)
 	}()
-	time.Sleep(0)
-	defer func() {
-		time.Sleep(0)
-	}()
+
 	dataPtr := util.BytesToPtr(data)
 	dataLen := uint64(len(data))
 	err := util.RetUint64ToError(conn_local_addr(c.id, dataPtr, util.Uint64ToPtr(&dataLen)))
@@ -180,28 +183,20 @@ func (c *Conn) LocalAddr() net.Addr {
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
-	time.Sleep(0)
-	defer func() {
-		time.Sleep(0)
-	}()
 	slog.Debug("[WASI] set dead line addr", "network", c.network, "id", c.id, "time", t)
-	return util.RetUint64ToError(conn_set_dead_line(c.id, uint64(t.Unix())))
+	c.readDeadline = t
+	c.writeDeadline = t
+	return nil
 }
 func (c *Conn) SetReadDeadline(t time.Time) error {
-	time.Sleep(0)
-	defer func() {
-		time.Sleep(0)
-	}()
 	slog.Debug("[WASI] set read dead line addr", "network", c.network, "id", c.id, "time", t)
-	return util.RetUint64ToError(conn_set_read_dead_line(c.id, uint64(t.Unix())))
+	c.readDeadline = t
+	return nil
 }
 func (c *Conn) SetWriteDeadline(t time.Time) error {
-	time.Sleep(0)
-	defer func() {
-		time.Sleep(0)
-	}()
 	slog.Debug("[WASI] set write dead line addr", "network", c.network, "id", c.id, "time", t)
-	return util.RetUint64ToError(conn_set_write_dead_line(c.id, uint64(t.Unix())))
+	c.readDeadline = t
+	return nil
 }
 
 type Listener struct {
@@ -214,10 +209,7 @@ func Listen(network string, address string) (*Listener, error) {
 	var id uint64
 	networkPtr := util.StringToPtr(&network)
 	addressPtr := util.StringToPtr(&address)
-	time.Sleep(0)
-	defer func() {
-		time.Sleep(0)
-	}()
+
 	err := util.RetUint64ToError(listener_listen(networkPtr, uint64(len(network)),
 		addressPtr, uint64(len(address)),
 		util.Uint64ToPtr(&id)))
@@ -230,10 +222,7 @@ func Listen(network string, address string) (*Listener, error) {
 // Accept waits for and returns the next connection to the listener.
 func (l *Listener) Accept() (net.Conn, error) {
 	slog.Debug("[WASI] listen accept", "id", l.id, "network", l.network)
-	time.Sleep(0)
-	defer func() {
-		time.Sleep(0)
-	}()
+
 	var connId uint64
 	err := util.RetUint64ToError(listener_accept(l.id, util.Uint64ToPtr(&connId)))
 	if err != nil {
@@ -245,20 +234,14 @@ func (l *Listener) Accept() (net.Conn, error) {
 // Close closes the listener.
 // Any blocked Accept operations will be unblocked and return errors.
 func (l *Listener) Close() error {
-	time.Sleep(0)
-	defer func() {
-		time.Sleep(0)
-	}()
+
 	slog.Debug("[WASI] listen close", "id", l.id, "network", l.network)
 	return util.RetUint64ToError(listener_close(l.id))
 }
 
 // Addr returns the listener's network address.
 func (l *Listener) Addr() net.Addr {
-	time.Sleep(0)
-	defer func() {
-		time.Sleep(0)
-	}()
+
 	slog.Debug("[WASI] addr", "id", l.id, "network", l.network)
 	data := util.MemPool.Get().([]byte)
 	defer func() {

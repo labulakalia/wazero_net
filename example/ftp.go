@@ -7,14 +7,41 @@ import (
 
 	"github.com/jlaffaye/ftp"
 	wasi_net "github.com/labulakalia/wazero_net/wasi/net"
+	// wasi_net "github.com/labulakalia/wazero_net/wasi/net"
 )
 
-func main() {}
+type Conn struct {
+	net.Conn
+	readTimeout time.Duration
+}
+
+func (c *Conn) Read(b []byte) (n int, err error) {
+	err = c.Conn.SetReadDeadline(time.Now().Add(c.readTimeout))
+	if err != nil {
+		return 0, err
+	}
+
+	return c.Conn.Read(b)
+}
+
+func NewConn(conn net.Conn, readTimeout time.Duration) *Conn {
+	return &Conn{
+		readTimeout: readTimeout,
+		Conn:        conn,
+	}
+}
+
+func main() {
+}
 
 //go:wasmexport ftp_connect
 func ftp_connect() {
-	ftpConn, err := ftp.Dial("127.0.0.1:2121", ftp.DialWithDialFunc(func(network, address string) (net.Conn, error) {
-		return wasi_net.Dial(network, address)
+	ftpConn, err := ftp.Dial("127.0.0.1:22", ftp.DialWithDialFunc(func(network, address string) (net.Conn, error) {
+		conn, err := wasi_net.Dial(network, address)
+		if err != nil {
+			return nil, err
+		}
+		return NewConn(conn, time.Second), nil
 	}),
 		ftp.DialWithTimeout(time.Second*3),
 	)
