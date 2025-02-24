@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/labulakalia/ssh"
 	wasi_net "github.com/labulakalia/wazero_net/wasi/net"
 	"github.com/pkg/sftp/v2"
+	"golang.org/x/crypto/ssh"
 )
 
 func main() {
@@ -23,7 +23,7 @@ func sftp_connect() {
 		return
 	}
 	defer conn.Close()
-	fmt.Println("new client conn")
+
 	c, chans, reqs, err := ssh.NewClientConn(conn, "127.0.0.1:22", &ssh.ClientConfig{
 		User:            "labulakalia",
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),

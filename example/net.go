@@ -39,7 +39,7 @@ func net_dial() {
 		}
 		slog.Info("write success", "n", n)
 		// time.Sleep(time.Millisecond) // must exist
-		runtime.Gosched()
+		// runtime.Gosched()
 		n, err = conn.Read(data)
 		if err != nil {
 			slog.Error("write failed", "err", err)
@@ -80,7 +80,7 @@ func startListen(lis *net.Listener) {
 				slog.Error("read count not equal", "rn", wn, "n", n)
 				break
 			}
-			runtime.Gosched()
+			// runtime.Gosched()
 			// time.Sleep(time.Millisecond) // must exist
 		}
 	}
