@@ -65,6 +65,11 @@ type Conn struct {
 
 func (c *Conn) Read(b []byte) (int, error) {
 	slog.Debug("[WASI] conn read", "network", c.network, "id", c.id, "len", len(b))
+	defer func() {
+		if !c.readDeadline.IsZero() {
+			c.readDeadline = time.Time{}
+		}
+	}()
 	var n uint64
 	bPtr := util.BytesToPtr(b)
 reply:
@@ -76,7 +81,6 @@ reply:
 		} else {
 			if strings.Contains(err.Error(), "i/o timeout") {
 				if !c.readDeadline.IsZero() && time.Now().After(c.readDeadline) {
-					c.readDeadline = time.Time{}
 					return 0, err
 				}
 				goto reply
@@ -90,7 +94,11 @@ reply:
 
 func (c *Conn) Write(b []byte) (int, error) {
 	slog.Debug("[WASI] conn write", "network", c.network, "id", c.id, "len", len(b))
-
+	defer func() {
+		if !c.readDeadline.IsZero() {
+			c.readDeadline = time.Time{}
+		}
+	}()
 	var n uint64
 	bPtr := util.BytesToPtr(b)
 reply:
@@ -99,7 +107,6 @@ reply:
 	if err != nil {
 		if strings.Contains(err.Error(), "i/o timeout") {
 			if !c.writeDeadline.IsZero() && time.Now().After(c.writeDeadline) {
-				c.writeDeadline = time.Time{}
 				return 0, err
 			}
 			goto reply
