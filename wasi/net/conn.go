@@ -4,6 +4,8 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/labulakalia/wazero_net/util"
@@ -62,14 +64,16 @@ func (c *Conn) Read(b []byte) (int, error) {
 	slog.Debug("[WASI] conn read", "network", c.network, "id", c.id, "len", len(b))
 	var n uint64
 	bPtr := util.BytesToPtr(b)
-	time.Sleep(0)
-	ret := conn_read(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n))
-	time.Sleep(0)
-	err := util.RetUint64ToError(ret)
+reply:
+	err := util.RetUint64ToError(conn_read(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n)))
+	runtime.Gosched()
 	if err != nil {
 		if err.Error() == "EOF" {
 			return int(n), io.EOF
 		} else {
+			if strings.Contains(err.Error(), "i/o timeout") {
+				goto reply
+			}
 			return 0, err
 		}
 	}
@@ -81,12 +85,16 @@ func (c *Conn) Write(b []byte) (int, error) {
 	slog.Debug("[WASI] conn write", "network", c.network, "id", c.id, "len", len(b))
 	var n uint64
 	bPtr := util.BytesToPtr(b)
-	time.Sleep(0)
+reply:
 	err := util.RetUint64ToError(conn_write(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n)))
-	time.Sleep(0)
+	runtime.Gosched()
 	if err != nil {
+		if strings.Contains(err.Error(), "i/o timeout") {
+			goto reply
+		}
 		return 0, err
 	}
+	slog.Debug("read success", "n", n)
 
 	return int(n), nil
 }

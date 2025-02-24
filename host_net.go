@@ -157,9 +157,11 @@ func (h *HostNet) conn_read(_ context.Context, m api.Module,
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
-
+	err = conn.SetReadDeadline(time.Now().Add(time.Millisecond * 30))
+	if err != nil {
+		return util.HostErrorToUint64(m, err)
+	}
 	n, err := conn.Read(bytes)
-
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
@@ -179,6 +181,10 @@ func (h *HostNet) conn_write(_ context.Context, m api.Module,
 		return util.HostErrorToUint64(m, err)
 	}
 	conn, err := h.getConn(connId)
+	if err != nil {
+		return util.HostErrorToUint64(m, err)
+	}
+	err = conn.SetWriteDeadline(time.Now().Add(time.Millisecond * 30))
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}

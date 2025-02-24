@@ -13,8 +13,8 @@ import (
 
 func main() {}
 
-//go:wasmexport samba_connect
-func samba_connect() {
+//go:wasmexport smb_connect
+func smb_connect() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	smbDialer := &smb2.Dialer{
 		Initiator: &smb2.NTLMInitiator{

@@ -121,20 +121,20 @@ func main() {
 		}
 
 		netMod.ExportedFunction("sftp_connect").Call(context.Background())
-	} else if os.Args[1] == "samba" {
-		sambaWasm, err := os.ReadFile("samba.wasm")
+	} else if os.Args[1] == "smb" {
+		smbWasm, err := os.ReadFile("smb.wasm")
 		if err != nil {
 			log.Panicln(err)
 		}
-		cm, err := r.CompileModule(context.Background(), sambaWasm)
+		cm, err := r.CompileModule(context.Background(), smbWasm)
 		if err != nil {
 			log.Panicln(err)
 		}
-		netMod, err := r.InstantiateModule(ctx, cm, conf)
+		mod, err := r.InstantiateModule(ctx, cm, conf)
 		if err != nil {
 			log.Panicln(err)
 		}
 
-		netMod.ExportedFunction("samba_connect").Call(context.Background())
+		mod.ExportedFunction("smb_connect").Call(context.Background())
 	}
 }
