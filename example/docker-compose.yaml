@@ -1,0 +1,30 @@
+version: "3"
+services:
+  ftps: # 显示
+    image: ghcr.io/haravich/custom-ftp-server:20250223
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    ports:
+      - "20-21:20-21"
+      - "20000-20010:20000-20010"
+    environment:
+      FTP_MODE: ftps
+      PASV_MIN_PORT: 20000
+      PASV_MAX_PORT: 20010
+  ftps_implicit: # 隐式
+    image: ghcr.io/haravich/custom-ftp-server:20250223
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    ports:
+      - "990:990"
+      - "20011-20021:20011-20021"
+    environment:
+      FTP_MODE: ftps_implicit
+      PASV_MIN_PORT: 20011
+      PASV_MAX_PORT: 20021

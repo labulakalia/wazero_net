@@ -3,6 +3,8 @@ package wazero_net
 import (
 	"context"
 	"crypto/tls"
+	"log/slog"
+	"runtime"
 
 	"errors"
 	"fmt"
@@ -103,14 +105,16 @@ func (h *HostNet) conn_dial_tls(_ context.Context, m api.Module,
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
+
 	address, err := util.HostReadBytes(m, uint32(addressPtr), uint32(addressLen))
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
-
+	slog.Debug("conn dial tls", "address", string(address))
 	conn, err := tls.Dial(util.BytesToString(network), util.BytesToString(address), &tls.Config{
 		InsecureSkipVerify: true,
 	})
+	runtime.Gosched()
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}

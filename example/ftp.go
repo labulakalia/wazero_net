@@ -2,13 +2,15 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
+	"log/slog"
 	"net"
+	"os"
 	"time"
 
 	"github.com/jlaffaye/ftp"
-	wasi_net "github.com/labulakalia/wazero_net/wasi/net"
-	// wasi_net "github.com/labulakalia/wazero_net/wasi/net"
+	wazero_net "github.com/labulakalia/wazero_net/wasi/net"
 )
 
 type Conn struct {
@@ -37,21 +39,26 @@ func main() {
 
 //go:wasmexport ftp_connect
 func ftp_connect() {
-	ftpConn, err := ftp.Dial("127.0.0.1:21", ftp.DialWithDialFunc(func(network, address string) (net.Conn, error) {
-		conn, err := wasi_net.Dial(network, address)
-		if err != nil {
-			return nil, err
-		}
-		return conn,err
-		// return NewConn(conn, time.Second), nil
-	}),
+	slog.SetLogLoggerLevel(slog.LevelDebug)
+
+	// slog.SetLogLoggerLevel(slog.LevelDebug)
+	ftpConn, err := ftp.Dial("127.0.0.1:21",
+		ftp.DialWithDialFunc(func(network, address string) (net.Conn, error) {
+			conn, err := wazero_net.Dial(network, address)
+			if err != nil {
+				log.Panicln(err)
+			}
+			return conn, nil
+		}),
+		ftp.DialWithDebugOutput(os.Stdout),
 		ftp.DialWithExplicitTLS(&tls.Config{InsecureSkipVerify: true}),
 	)
 	if err != nil {
 		log.Panicln(err)
 	}
-	user := "user"
-	password := "passwd"
+	fmt.Println("start login")
+	user := "ftpuser"
+	password := "admin"
 	if user == "" && password == "" {
 		password = "anonymous"
 		user = "anonymous"
@@ -60,6 +67,7 @@ func ftp_connect() {
 	if err != nil {
 		log.Panicln(err)
 	}
+	fmt.Println("start List")
 	entries, err := ftpConn.List("/")
 	if err != nil {
 		log.Panicln(err)

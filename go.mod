@@ -26,4 +26,4 @@ require (
 	golang.org/x/sys v0.30.0 // indirect
 )
 
-replace github.com/jlaffaye/ftp => ../ftp
+//replace github.com/jlaffaye/ftp => ../ftp
