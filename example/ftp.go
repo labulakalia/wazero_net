@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"log"
 	"net"
 	"time"
@@ -36,14 +37,15 @@ func main() {
 
 //go:wasmexport ftp_connect
 func ftp_connect() {
-	ftpConn, err := ftp.Dial("127.0.0.1:22", ftp.DialWithDialFunc(func(network, address string) (net.Conn, error) {
+	ftpConn, err := ftp.Dial("127.0.0.1:21", ftp.DialWithDialFunc(func(network, address string) (net.Conn, error) {
 		conn, err := wasi_net.Dial(network, address)
 		if err != nil {
 			return nil, err
 		}
-		return NewConn(conn, time.Second), nil
+		return conn,err
+		// return NewConn(conn, time.Second), nil
 	}),
-		ftp.DialWithTimeout(time.Second*3),
+		ftp.DialWithExplicitTLS(&tls.Config{InsecureSkipVerify: true}),
 	)
 	if err != nil {
 		log.Panicln(err)

@@ -11,7 +11,7 @@ import (
 	"net/url"
 
 	"github.com/labulakalia/wazero_net/util"
-	wasihttp "github.com/labulakalia/wazero_net/wasi/http"
+	_ "github.com/labulakalia/wazero_net/wasi/http"
 )
 
 //go:wasmexport https_get
@@ -24,16 +24,14 @@ func https_get(urlPtr, length uint64) {
 		log.Panicln("parse url failed", err)
 	}
 
-	resp, err := wasihttp.Do(&http.Request{
-		Method: "GET",
-		URL:    u,
-	})
+	resp, err := http.Get(u.String())
 
 	if err != nil {
 		log.Panicln("do failed", err)
 	}
-	fmt.Println("status code", resp.StatusCode)
-	fmt.Println("resp", resp)
+	fmt.Println("resp status code", resp.StatusCode)
+	fmt.Println("resp header", resp.Header)
+	fmt.Println("resp body", resp.Body)
 }
 
 func main() {}

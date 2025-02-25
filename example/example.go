@@ -80,7 +80,7 @@ func main() {
 			log.Panicln(err)
 		}
 		malloc := httpMod.ExportedFunction("malloc")
-		url := "https://dav.jianguoyun.com/dav/"
+		url := "https://httpbin.org/get"
 		result, err := malloc.Call(ctx, uint64(len(url)))
 		if err != nil {
 			log.Fatalln("malloc", err)

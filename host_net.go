@@ -3,7 +3,7 @@ package wazero_net
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
+
 	"errors"
 	"fmt"
 	"net"
@@ -109,10 +109,7 @@ func (h *HostNet) conn_dial_tls(_ context.Context, m api.Module,
 	}
 
 	conn, err := tls.Dial(util.BytesToString(network), util.BytesToString(address), &tls.Config{
-		InsecureSkipVerify: false,
-		VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-			return nil
-		},
+		InsecureSkipVerify: true,
 	})
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
