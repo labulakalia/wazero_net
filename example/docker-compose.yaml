@@ -1,7 +1,7 @@
 version: "3"
 services:
   ftp: # 显示
-    build: ../custom-ftp-server
+    build: ../custom-ftp-server # https://github.com/haravich/custom-ftp-server/
     ports:
       - "2121:21"
       - "2020:20"
