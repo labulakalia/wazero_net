@@ -1,0 +1,37 @@
+version: "3"
+services:
+  ftp: # 显示
+    build: ../custom-ftp-server
+    ports:
+      - "2121:21"
+      - "2020:20"
+      - "10000-10010:10000-10010"
+    environment:
+      FTP_MODE: ftp
+      PASV_MIN_PORT: 10000
+      PASV_MAX_PORT: 10010
+      FTP_USER: "user"
+      FTP_PASSWORD: "passwd"
+  ftps: # 显示
+    build: ../custom-ftp-server
+    ports:
+      - "21:21"
+      - "20:20"
+      - "20000-20010:20000-20010"
+    environment:
+      FTP_MODE: ftps
+      PASV_MIN_PORT: 20000
+      PASV_MAX_PORT: 20010
+      FTP_USER: "user"
+      FTP_PASSWORD: "passwd"
+  ftps_implicit: # 隐式
+    build: ../custom-ftp-server
+    ports:
+      - "990:990"
+      - "20011-20021:20011-20021"
+    environment:
+      FTP_MODE: ftps_implicit
+      PASV_MIN_PORT: 20011
+      PASV_MAX_PORT: 20021
+      FTP_USER: "user"
+      FTP_PASSWORD: "passwd"
