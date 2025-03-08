@@ -39,6 +39,9 @@ func UnsafeByte4ToUint32(val []byte) uint32 {
 
 // https://colobu.com/2022/09/06/string-byte-convertion/
 func BytesToString(bytes []byte) string {
+	if len(bytes) == 0 {
+		return ""
+	}
 	return unsafe.String(unsafe.SliceData(bytes), len(bytes))
 }
 
@@ -55,6 +58,9 @@ func PtrToString(ptr uint32, ptrLen uint32) string {
 }
 
 func BytesToPtr(bytes []byte) uint64 {
+	if len(bytes) == 0 {
+		return 0
+	}
 	return uint64(uintptr(unsafe.Pointer(&bytes[0])))
 }
 
