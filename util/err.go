@@ -6,16 +6,16 @@ func ErrorToUint64(err error) uint64 {
 		return 0
 	}
 	errStr := err.Error()
-	errLength := uint32(len(errStr) | (1 << 31))
+	errLength := uint32(len(errStr) | (1<<31 - 1))
 	errPtr := uint32(StringToPtr(&errStr))
 	return Uint32ToUint64(errPtr, uint32(errLength))
 }
 
 func Uint64HasError(ret uint64) bool {
-	return ret&(1<<31) != 0
+	return ret&(1<<31-1) != 0
 }
 
 func Uint64ToErrPtrLength(ret uint64) (ptr uint32, length uint32) {
 	dataPtr, dataLen := Uint64ToUint32(ret)
-	return dataPtr, dataLen ^ (1 << 31)
+	return dataPtr, dataLen ^ (1<<31 - 1)
 }
