@@ -87,6 +87,7 @@ func (h *HostNet) conn_dial(_ context.Context, m api.Module,
 	}
 	if util.BytesToString(network) == "tcp" {
 		conn.(*net.TCPConn).SetKeepAlive(true)
+		conn.(*net.TCPConn).SetKeepAlivePeriod(time.Second * 3)
 	}
 	newConnId := h.storeConn(conn)
 

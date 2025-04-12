@@ -22,9 +22,6 @@ require (
 	github.com/jcmturner/goidentity/v6 v6.0.1 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	golang.org/toolchain v0.0.1-go1.24.0.linux-amd64 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 )
-
-replace github.com/jlaffaye/ftp => ../ftp
