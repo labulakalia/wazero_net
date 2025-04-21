@@ -217,6 +217,7 @@ func (h *HostNet) conn_remote_addr(_ context.Context, m api.Module,
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
+
 	remoteAddr := conn.RemoteAddr().String()
 
 	length, ok := m.Memory().ReadUint64Le(uint32(addrLenPtr))

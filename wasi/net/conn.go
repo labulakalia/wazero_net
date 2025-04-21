@@ -4,12 +4,12 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"net/netip"
 	"runtime"
 	"strings"
 	"time"
 
 	"github.com/labulakalia/wazero_net/util"
-	_ "github.com/labulakalia/wazero_net/wasi/malloc"
 )
 
 // TODO Dial add timeout or ctx
@@ -139,21 +139,26 @@ func (c *Conn) RemoteAddr() net.Addr {
 		slog.Error("remote addr failed", "err", err)
 		return nil
 	}
-
+	addrPortStr := util.BytesToString(data[:dataLength])
+	addrPort, err := netip.ParseAddrPort(addrPortStr)
+	if err != nil {
+		slog.Error("parse failed", "err", err)
+		return nil
+	}
 	var addr net.Addr
 	// TODO support more protocol
 	switch c.network {
 	case "tcp":
-		addr, err = net.ResolveTCPAddr(c.network, util.BytesToString(data[:dataLength]))
-		if err != nil {
-			slog.Error("resolve tcp failed", "err", err)
-			return nil
+		addr = &net.TCPAddr{
+			IP:   addrPort.Addr().AsSlice(),
+			Zone: addrPort.Addr().Zone(),
+			Port: int(addrPort.Port()),
 		}
 	case "udp":
-		addr, err = net.ResolveUDPAddr(c.network, util.BytesToString(data[:dataLength]))
-		if err != nil {
-			slog.Error("resolve udp failed", "err", err)
-			return nil
+		addr = &net.UDPAddr{
+			IP:   addrPort.Addr().AsSlice(),
+			Zone: addrPort.Addr().Zone(),
+			Port: int(addrPort.Port()),
 		}
 	}
 	return addr
@@ -172,18 +177,25 @@ func (c *Conn) LocalAddr() net.Addr {
 		slog.Error("read local addr failed", "err", err)
 		return nil
 	}
-
+	addrPortStr := util.BytesToString(data[:dataLen])
+	addrPort, err := netip.ParseAddrPort(addrPortStr)
+	if err != nil {
+		slog.Error("parse failed", "err", err)
+		return nil
+	}
 	var addr net.Addr
 	switch c.network {
 	case "tcp":
-		addr, err = net.ResolveTCPAddr(c.network, util.BytesToString(data[:dataLen]))
-		if err != nil {
-			return nil
+		addr = &net.TCPAddr{
+			IP:   addrPort.Addr().AsSlice(),
+			Zone: addrPort.Addr().Zone(),
+			Port: int(addrPort.Port()),
 		}
 	case "udp":
-		addr, err = net.ResolveUDPAddr(c.network, util.BytesToString(data[:dataLen]))
-		if err != nil {
-			return nil
+		addr = &net.UDPAddr{
+			IP:   addrPort.Addr().AsSlice(),
+			Zone: addrPort.Addr().Zone(),
+			Port: int(addrPort.Port()),
 		}
 	}
 	return addr
