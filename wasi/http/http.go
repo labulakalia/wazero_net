@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/labulakalia/wazero_net/util"
-	_ "github.com/labulakalia/wazero_net/wasi/malloc"
 )
 
 // re impl this interface

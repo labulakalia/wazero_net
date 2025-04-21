@@ -3,7 +3,7 @@ package http
 import "net/http"
 
 func init() {
-	http.DefaultTransport = &Transport{}
+	http.DefaultClient.Transport = &Transport{}
 }
 
 type Transport struct {
