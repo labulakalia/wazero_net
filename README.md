@@ -2,8 +2,6 @@
 
 this project provider net/http for [wazero](https://github.com/tetratelabs/wazero), it not belong to wazero's official project
 
-> Dial's Conn can not convert to net.TCPConn,net.UDPConn
-
 ## Install
 
 ```
