@@ -7,7 +7,6 @@ require (
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/tetratelabs/wazero v1.9.0
 	golang.org/x/crypto v0.37.0
-	tinygo.org/x/drivers v0.31.0
 )
 
 require github.com/pkg/sftp v1.13.9
@@ -31,4 +30,4 @@ require (
 
 replace github.com/pkg/sftp => github.com/labulakalia/sftp v1.13.10-0.20250421063436-b983016d5069
 
-replace github.com/cloudsoda/go-smb2 => ../go-smb2
+replace github.com/cloudsoda/go-smb2 => github.com/labulakalia/go-smb2 v0.0.0-20250421065043-77cbbfc100dc
