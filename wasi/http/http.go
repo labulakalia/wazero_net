@@ -28,7 +28,7 @@ func Do(req *http.Request) (*http.Response, error) {
 		respPtr uint64
 		respLen uint64
 	)
-	ret := client_do(util.BytesToPtr(reqData), uint64(reqDataLen), util.Uint64ToPtr(&respPtr), util.Uint64ToPtr(&respLen))
+	ret := _client_do(util.BytesToPtr(reqData), uint64(reqDataLen), util.Uint64ToPtr(&respPtr), util.Uint64ToPtr(&respLen))
 	if ret != 0 {
 		return nil, util.RetUint64ToError(ret)
 	}
