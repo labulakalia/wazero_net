@@ -33,3 +33,5 @@ go run example.go net
 ## Some Limit
 
 https://go.dev/blog/wasi#limitations
+
+Memory Usage is too big,so will switch to tinygo in v2
