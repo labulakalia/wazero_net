@@ -16,9 +16,9 @@ go get github.com/labulakalia/wazero_net
 
 ```
 cd example
-tinygo build  -x -target=wasip1 -buildmode=c-shared -o http.wasm http.go
+tinygo build  -x -target=wasip1 -buildmode=c-shared -o http.wasm wasm/http.go
 go run example.go http
-tinygo build  -x -target=wasip1 -buildmode=c-shared -o net.wasm net.go
+tinygo build  -x -target=wasip1 -buildmode=c-shared -o net.wasm wasm/net.go
 go run example.go net
 ```
 
@@ -26,9 +26,3 @@ go run example.go net
 
 - [ ] support ip,unix addr
 - [ ] add unit test
-
-## Some Limit
-
-https://go.dev/blog/wasi#limitations
-
-Memory Usage is too big,so will switch to tinygo in v2

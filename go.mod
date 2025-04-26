@@ -3,13 +3,12 @@ module github.com/labulakalia/wazero_net
 go 1.24.0
 
 require (
-	github.com/cloudsoda/go-smb2 v0.0.0-20250228001242-d4c70e6251cc
 	github.com/jlaffaye/ftp v0.2.0
-	github.com/tetratelabs/wazero v1.9.0
+	github.com/medianexapp/go-smb2 v0.0.0-20250425112922-92edacdefca5
+	github.com/medianexapp/sftp v1.13.10-0.20250425113120-4ffdd4c8163a
+	github.com/tetratelabs/wazero v1.9.1-0.20250414143203-0dea5d7ee1de
 	golang.org/x/crypto v0.37.0
 )
-
-require github.com/pkg/sftp v1.13.9
 
 require (
 	github.com/cloudsoda/sddl v0.0.0-20250224235906-926454e91efc // indirect
@@ -24,10 +23,6 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/net v0.39.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 )
-
-replace github.com/pkg/sftp => github.com/labulakalia/sftp v1.13.10-0.20250421063436-b983016d5069
-
-replace github.com/cloudsoda/go-smb2 => github.com/labulakalia/go-smb2 v0.0.0-20250421065043-77cbbfc100dc

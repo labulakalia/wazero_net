@@ -2,19 +2,17 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
-	"github.com/cloudsoda/go-smb2"
-
 	wasi_net "github.com/labulakalia/wazero_net/wasi/net"
+	"github.com/medianexapp/go-smb2"
 )
 
 func main() {}
 
 //go:wasmexport smb_connect
 func smb_connect() {
-	slog.SetLogLoggerLevel(slog.LevelDebug)
+	// slog.SetLogLoggerLevel(slog.LevelDebug)
 	smbDialer := &smb2.Dialer{
 		Initiator: &smb2.NTLMInitiator{
 			User:     "labulakalia",
@@ -28,28 +26,30 @@ func smb_connect() {
 		slog.Error("failed to dial", "error", err)
 		return
 	}
-
+	conn = conn
 	smbSession, err := smbDialer.DialConn(context.Background(), conn, addr)
 	if err != nil {
 		slog.Error("failed to dial", "error", err)
 		return
 	}
-
 	smbSession = smbSession
 
-	shareNames, err := smbSession.ListSharenames()
-	if err != nil {
-		slog.Error("list share names", "error", err)
-		return
-	}
-	fmt.Println(shareNames)
-	share, err := smbSession.Mount("labulakalia")
-	if err != nil {
-		slog.Error("mount dial", "error", err)
-		return
-	}
-	fmt.Println(share)
-	share.Umount()
+	// smbSession = smbSession
+
+	// shareNames, err := smbSession.ListSharenames()
+	// if err != nil {
+	// 	slog.Error("list share names", "error", err)
+	// 	return
+	// }
+	// fmt.Println(shareNames)
+	// share, err := smbSession.Mount("labulakalia")
+	// if err != nil {
+	// 	slog.Error("mount dial", "error", err)
+	// 	return
+	// }
+	// fmt.Println(share)
+	// share.Umount()
 	// smbSession.Logoff()
 	slog.Info("umount sussess")
+
 }

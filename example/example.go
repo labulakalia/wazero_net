@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/rand"
 	_ "embed"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
 
 	"github.com/labulakalia/wazero_net"
 	"github.com/tetratelabs/wazero"
+	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 )
 
@@ -24,8 +26,9 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
+	features := api.CoreFeaturesV2.SetEnabled(api.CoreFeatureMutableGlobal, false)
 	rConfig := wazero.NewRuntimeConfig().
-		WithCompilationCache(cache)
+		WithCompilationCache(cache).WithDebugInfoEnabled(true).WithCloseOnContextDone(true).WithCoreFeatures(features)
 
 	r := wazero.NewRuntimeWithConfig(ctx, rConfig)
 	// defer r.Close(ctx)
@@ -63,7 +66,7 @@ func main() {
 			log.Panicln(err)
 		}
 		netMod.ExportedFunction("net_dial").Call(context.Background())
-		// netMod.ExportedFunction("net_dial").Call(context.Background())
+		netMod.ExportedFunction("dial").Call(context.Background())
 	} else if os.Args[1] == "http" {
 		netWasm, err := os.ReadFile("http.wasm")
 		if err != nil {
@@ -139,8 +142,10 @@ func main() {
 		if err != nil {
 			log.Panicln(err)
 		}
-		mod.ExportedFunction("smb_connect").Call(ctx)
-		slog.Info("exit smb")
-		// exit wait 60 second
+		fmt.Println(mod.ExportedFunctionDefinitions())
+
+		_, err = mod.ExportedFunction("smb_connect").Call(context.Background())
+		slog.Info("exit smb", "err", err)
+
 	}
 }

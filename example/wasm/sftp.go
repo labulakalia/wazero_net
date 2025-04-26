@@ -1,19 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"time"
 
 	wasi_net "github.com/labulakalia/wazero_net/wasi/net"
-	"github.com/pkg/sftp"
+	"github.com/medianexapp/sftp"
 	"golang.org/x/crypto/ssh"
 )
 
 func main() {}
 
+var sftpClient *sftp.Client
+
 //go:wasmexport sftp_connect
 func sftp_connect() {
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 	conn, err := wasi_net.Dial("tcp", "127.0.0.1:22")
 	if err != nil {
 		slog.Error("dial failed", "err", err)
@@ -40,12 +42,14 @@ func sftp_connect() {
 		slog.Error("new sftp client failed", "err", err)
 		return
 	}
-	files, err := client.ReadDir("/etc")
-	if err != nil {
-		slog.Error("read dir failed", "err", err)
-		return
-	}
-	for _, file := range files {
-		fmt.Printf("file: %v\n", file.Name())
-	}
+	sftpClient = client
+	slog.Debug("new client success")
+	// files, err := client.ReadDir("/etc")
+	// if err != nil {
+	// 	slog.Error("read dir failed", "err", err)
+	// 	return
+	// }
+	// for _, file := range files {
+	// 	fmt.Printf("file: %v\n", file.Name())
+	// }
 }
