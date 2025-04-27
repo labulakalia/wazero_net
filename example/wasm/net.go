@@ -45,7 +45,6 @@ func net_dial() {
 }
 
 func startListen(lis *net.Listener) {
-
 	for {
 		conn, err := lis.Accept()
 		if err != nil {
@@ -75,20 +74,30 @@ func startListen(lis *net.Listener) {
 				slog.Error("read count not equal", "rn", wn, "n", n)
 				break
 			}
-			// runtime.Gosched()
-			// time.Sleep(time.Millisecond) // must exist
+
 		}
 	}
 }
 
+var conn *net.Conn
+
 //go:wasmexport dial
 func dial() {
+	var err error
+	if conn != nil {
+		conn.Write([]byte("xxxxx2"))
+
+		fmt.Println(conn.RemoteAddr())
+		return
+	}
 	slog.SetLogLoggerLevel(slog.LevelDebug)
-	conn, err := net.Dial("tcp", "127.0.0.1:2121")
+	conn, err = net.Dial("tcp", "127.0.0.1:8000")
 	if err != nil {
 		slog.Error("wasm dial failed", "err", err)
 		return
 	}
+	conn.Write([]byte("xxxxx1"))
+
 	fmt.Println(conn.LocalAddr())
 }
 

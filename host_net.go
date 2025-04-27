@@ -155,7 +155,7 @@ func (h *HostNet) conn_read(_ context.Context, m api.Module,
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
-	err = conn.SetReadDeadline(time.Now().Add(time.Millisecond * 30))
+	err = conn.SetReadDeadline(time.Now().Add(time.Millisecond * 10))
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}

@@ -1,3 +1,5 @@
+//go:build wasip1
+
 package net
 
 import (
@@ -13,7 +15,7 @@ import (
 )
 
 // TODO Dial add timeout or ctx
-func Dial(network, address string) (*Conn, error) {
+func Dial(network, address string) (net.Conn, error) {
 	slog.Debug("[WASI] dial", "network", network, "address", address)
 	var id uint64
 	networkPtr := util.StringToPtr(&network)
@@ -73,22 +75,27 @@ func (c *Conn) Read(b []byte) (int, error) {
 	var n uint64
 	bPtr := util.BytesToPtr(b)
 reply:
+	runtime.Gosched()
 	err := util.RetUint64ToError(conn_read(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n)))
 	runtime.Gosched()
 	if err != nil {
+		slog.Error("read err", "err", err)
 		if err.Error() == "EOF" {
 			return int(n), io.EOF
 		} else {
 			if strings.Contains(err.Error(), "i/o timeout") {
 				if !c.readDeadline.IsZero() && time.Now().After(c.readDeadline) {
+					slog.Error("read errzero", "err", err)
 					return 0, err
 				}
+				slog.Error("read err retry", "err", err)
 				goto reply
 			}
+			slog.Error("read err ", "err", err)
 			return 0, err
 		}
 	}
-	slog.Debug("read success", "n", n)
+	slog.Info("read success", "n", n)
 	return int(n), nil
 }
 

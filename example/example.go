@@ -8,6 +8,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/labulakalia/wazero_net"
 	"github.com/tetratelabs/wazero"
@@ -16,7 +17,8 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
 	// // add wasm cache
 	cacheDir := os.TempDir()
@@ -27,7 +29,7 @@ func main() {
 		log.Panicln(err)
 	}
 	features := api.CoreFeaturesV2.SetEnabled(api.CoreFeatureMutableGlobal, false)
-	rConfig := wazero.NewRuntimeConfig().
+	rConfig := wazero.NewRuntimeConfigCompiler().
 		WithCompilationCache(cache).WithDebugInfoEnabled(true).WithCloseOnContextDone(true).WithCoreFeatures(features)
 
 	r := wazero.NewRuntimeWithConfig(ctx, rConfig)
@@ -65,7 +67,7 @@ func main() {
 		if err != nil {
 			log.Panicln(err)
 		}
-		netMod.ExportedFunction("net_dial").Call(context.Background())
+		netMod.ExportedFunction("dial").Call(context.Background())
 		netMod.ExportedFunction("dial").Call(context.Background())
 	} else if os.Args[1] == "http" {
 		netWasm, err := os.ReadFile("http.wasm")
@@ -128,7 +130,11 @@ func main() {
 			log.Panicln(err)
 		}
 
-		netMod.ExportedFunction("sftp_connect").Call(context.Background())
+		f := netMod.ExportedFunction("sftp_connect")
+		fmt.Println(f.Call(context.Background()))
+		// time.Sleep(time.Second * 10)
+		fmt.Println(f.Call(context.Background()))
+
 	} else if os.Args[1] == "smb" {
 		smbWasm, err := os.ReadFile("smb.wasm")
 		if err != nil {
@@ -144,8 +150,10 @@ func main() {
 		}
 		fmt.Println(mod.ExportedFunctionDefinitions())
 
-		_, err = mod.ExportedFunction("smb_connect").Call(context.Background())
-		slog.Info("exit smb", "err", err)
+		_, err = mod.ExportedFunction("smb_connect").Call(ctx)
+		if err != nil {
+			fmt.Println(err)
+		}
 
 	}
 }
