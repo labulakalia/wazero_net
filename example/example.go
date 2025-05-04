@@ -87,7 +87,7 @@ func main() {
 
 		malloc := httpMod.ExportedFunction("malloc")
 		free := httpMod.ExportedFunction("free")
-		url := "https://httpbin.org/get"
+		url := "https://medianex.app/whoami"
 		results, err := malloc.Call(ctx, uint64(len(url)))
 		if err != nil {
 			log.Panicln(err)

@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -18,11 +19,15 @@ func https_get(urlPtr, length uint64) {
 	resp, err := http.Get(geturl)
 
 	if err != nil {
-		log.Panicln("do failed", err)
+		log.Panicln("get failed", err)
 	}
 	fmt.Println("resp status code", resp.StatusCode)
 	fmt.Println("resp header", resp.Header)
-	fmt.Println("resp body", resp.Body)
+	respData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Panicln("readall failed", err)
+	}
+	fmt.Println("resp body\n", string(respData))
 }
 
 func main() {}
