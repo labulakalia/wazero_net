@@ -8,6 +8,7 @@ require (
 	github.com/medianexapp/sftp v1.13.10-0.20250425113120-4ffdd4c8163a
 	github.com/tetratelabs/wazero v1.9.1-0.20250414143203-0dea5d7ee1de
 	golang.org/x/crypto v0.37.0
+	golang.org/x/net v0.39.0
 )
 
 require (
@@ -23,6 +24,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/text v0.24.0 // indirect
+	tinygo.org/x/drivers v0.31.0 // indirect
 )

@@ -2,11 +2,15 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io"
+	"log"
 	"log/slog"
+	"net"
 
-	"github.com/labulakalia/wazero_net/wasi/net"
+	// "net/http"
+
+	_ "github.com/labulakalia/wazero_net/wasi/http"
+	wasinet "github.com/labulakalia/wazero_net/wasi/net"
 )
 
 //go:wasmexport net_dial
@@ -44,7 +48,7 @@ func net_dial() {
 	conn.Close()
 }
 
-func startListen(lis *net.Listener) {
+func startListen(lis net.Listener) {
 	for {
 		conn, err := lis.Accept()
 		if err != nil {
@@ -79,26 +83,16 @@ func startListen(lis *net.Listener) {
 	}
 }
 
-var conn *net.Conn
+var conn net.Conn
 
 //go:wasmexport dial
 func dial() {
-	var err error
-	if conn != nil {
-		conn.Write([]byte("xxxxx2"))
-
-		fmt.Println(conn.RemoteAddr())
-		return
-	}
-	slog.SetLogLoggerLevel(slog.LevelDebug)
-	conn, err = net.Dial("tcp", "127.0.0.1:8000")
+	conn, err := wasinet.Dial("tcp", "1.1.1.1:80")
 	if err != nil {
-		slog.Error("wasm dial failed", "err", err)
-		return
+		log.Fatalln(err)
 	}
-	conn.Write([]byte("xxxxx1"))
-
-	fmt.Println(conn.LocalAddr())
+	log.Println(conn.RemoteAddr())
+	log.Println(conn.LocalAddr())
 }
 
 func main() {}

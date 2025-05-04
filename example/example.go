@@ -54,7 +54,6 @@ func main() {
 		WithSysWalltime()
 
 	if os.Args[1] == "net" {
-
 		netWasm, err := os.ReadFile("net.wasm")
 		if err != nil {
 			log.Panicln(err)
@@ -68,7 +67,7 @@ func main() {
 			log.Panicln(err)
 		}
 		netMod.ExportedFunction("dial").Call(context.Background())
-		netMod.ExportedFunction("dial").Call(context.Background())
+		// netMod.ExportedFunction("dial").Call(context.Background())
 	} else if os.Args[1] == "http" {
 		netWasm, err := os.ReadFile("http.wasm")
 		if err != nil {

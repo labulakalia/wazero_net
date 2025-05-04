@@ -3,6 +3,7 @@
 package net
 
 import (
+	"crypto/tls"
 	"io"
 	"log/slog"
 	"net"
@@ -32,7 +33,7 @@ func Dial(network, address string) (net.Conn, error) {
 	return &Conn{id: uint64(id), network: network}, nil
 }
 
-func DialTls(network, address string) (*Conn, error) {
+func DialTLS(network, address string, _ *tls.Config) (*Conn, error) {
 	slog.Debug("[WASI] dial tls", "network", network, "address", address)
 	var id uint64
 	networkPtr := util.StringToPtr(&network)
@@ -44,20 +45,12 @@ func DialTls(network, address string) (*Conn, error) {
 		return nil, util.RetUint64ToError(ret)
 	}
 
-	return &Conn{id: uint64(id), network: network}, nil
+	return &Conn{id: id, network: network}, nil
 }
-
-// net/http/transport.go:1714
-func (c *Conn) Handshake() error {
-	return util.RetUint64ToError(conn_tls_handshake(c.id))
-}
-
-// set tc.ConnectionState() tlsState
 
 var _ net.Conn = &Conn{}
 
 type Conn struct {
-	*net.TCPConn
 	id      uint64
 	network string
 
@@ -79,7 +72,6 @@ reply:
 	err := util.RetUint64ToError(conn_read(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n)))
 	runtime.Gosched()
 	if err != nil {
-		slog.Error("read err", "err", err)
 		if err.Error() == "EOF" {
 			return int(n), io.EOF
 		} else {
@@ -88,14 +80,13 @@ reply:
 					slog.Error("read errzero", "err", err)
 					return 0, err
 				}
-				slog.Error("read err retry", "err", err)
+				slog.Debug("read err retry", "err", err)
 				goto reply
 			}
-			slog.Error("read err ", "err", err)
 			return 0, err
 		}
 	}
-	slog.Info("read success", "n", n)
+	slog.Debug("read success", "count", n, "remoteAddr", c.RemoteAddr())
 	return int(n), nil
 }
 
