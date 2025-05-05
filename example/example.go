@@ -97,7 +97,7 @@ func main() {
 
 		_, err = https.Call(ctx, results[0], uint64(len(url)))
 		if err != nil {
-			log.Fatalln("https get", err)
+			fmt.Println(err)
 		}
 		httpMod.Close(context.Background())
 	} else if os.Args[1] == "ftp" {
@@ -153,6 +153,25 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 		}
+	} else if os.Args[1] == "panic" {
+		panicWasm, err := os.ReadFile("panic.wasm")
+		if err != nil {
+			log.Panicln(err)
+		}
+		cm, err := r.CompileModule(context.Background(), panicWasm)
+		if err != nil {
+			log.Panicln(err)
+		}
+		mod, err := r.InstantiateModule(ctx, cm, conf)
+		if err != nil {
+			log.Panicln(err)
+		}
+		fmt.Println(mod.ExportedFunctionDefinitions())
 
+		_, err = mod.ExportedFunction("panic_test").Call(ctx)
+		if err != nil {
+			fmt.Println("call panic test")
+			fmt.Println(err)
+		}
 	}
 }
