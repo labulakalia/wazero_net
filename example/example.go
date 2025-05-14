@@ -87,7 +87,7 @@ func main() {
 
 		malloc := httpMod.ExportedFunction("malloc")
 		free := httpMod.ExportedFunction("free")
-		url := "https://medianex.app/whoami"
+		url := "https://whoami.medianex.app"
 		results, err := malloc.Call(ctx, uint64(len(url)))
 		if err != nil {
 			log.Panicln(err)
@@ -169,6 +169,26 @@ func main() {
 		fmt.Println(mod.ExportedFunctionDefinitions())
 
 		_, err = mod.ExportedFunction("panic_test").Call(ctx)
+		if err != nil {
+			fmt.Println("call panic test")
+			fmt.Println(err)
+		}
+	} else if os.Args[1] == "webdav" {
+		panicWasm, err := os.ReadFile("webdav.wasm")
+		if err != nil {
+			log.Panicln(err)
+		}
+		cm, err := r.CompileModule(context.Background(), panicWasm)
+		if err != nil {
+			log.Panicln(err)
+		}
+		mod, err := r.InstantiateModule(ctx, cm, conf)
+		if err != nil {
+			log.Panicln(err)
+		}
+		fmt.Println(mod.ExportedFunctionDefinitions())
+
+		_, err = mod.ExportedFunction("webdav_connect").Call(ctx)
 		if err != nil {
 			fmt.Println("call panic test")
 			fmt.Println(err)
