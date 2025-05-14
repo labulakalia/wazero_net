@@ -12,6 +12,7 @@
 package http
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"unsafe"
@@ -40,5 +41,7 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func init() {
+	fmt.Println("init trans port")
+	http.DefaultTransport = &Transport{}
 	http.DefaultClient.Transport = &Transport{}
 }
