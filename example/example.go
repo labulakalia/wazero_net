@@ -95,10 +95,13 @@ func main() {
 		defer free.Call(ctx, results[0])
 		httpMod.Memory().Write(uint32(results[0]), []byte(url))
 
-		_, err = https.Call(ctx, results[0], uint64(len(url)))
-		if err != nil {
-			fmt.Println(err)
+		for range 3 {
+			_, err = https.Call(ctx, results[0], uint64(len(url)))
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
+
 		httpMod.Close(context.Background())
 	} else if os.Args[1] == "ftp" {
 		ftpWasm, err := os.ReadFile("ftp.wasm")
