@@ -8,6 +8,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/labulakalia/wazero_net"
@@ -44,6 +45,13 @@ func main() {
 
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
 
+	fsPath := os.Args[2]
+	fmt.Println(fsPath)
+	fsConfig := wazero.NewFSConfig()
+	mountFs := `/` + strings.ReplaceAll(strings.ReplaceAll(fsPath, ":", ""), `\`, "/")
+	fsConfig = fsConfig.WithDirMount(fsPath, mountFs)
+	fmt.Println("mount fs", mountFs)
+
 	conf := wazero.NewModuleConfig().WithStartFunctions("_initialize").
 		WithStdout(os.Stdout).
 		WithStderr(os.Stderr).
@@ -51,7 +59,8 @@ func main() {
 		WithRandSource(rand.Reader).
 		WithSysNanosleep().
 		WithSysNanotime().
-		WithSysWalltime()
+		WithSysWalltime().
+		WithFSConfig(fsConfig)
 
 	if os.Args[1] == "net" {
 		netWasm, err := os.ReadFile("net.wasm")
@@ -83,24 +92,30 @@ func main() {
 		if err != nil {
 			log.Panicln(err)
 		}
-		https := httpMod.ExportedFunction("https_get")
+		// malloc := httpMod.ExportedFunction("malloc")
+		// free := httpMod.ExportedFunction("free")
+		// for i := range 1 {
+		// 	go func() {
+		// 		fmt.Println("call", "https_get"+fmt.Sprint(i+1))
+		// 		https := httpMod.ExportedFunction("https_get" + fmt.Sprint(i+1))
 
-		malloc := httpMod.ExportedFunction("malloc")
-		free := httpMod.ExportedFunction("free")
-		url := "https://whoami.medianex.app"
-		results, err := malloc.Call(ctx, uint64(len(url)))
-		if err != nil {
-			log.Panicln(err)
-		}
-		defer free.Call(ctx, results[0])
-		httpMod.Memory().Write(uint32(results[0]), []byte(url))
+		// 		url := "https://whoami.medianex.app"
+		// 		results, err := malloc.Call(ctx, uint64(len(url)))
+		// 		if err != nil {
+		// 			log.Panicln(err)
+		// 		}
+		// 		defer free.Call(ctx, results[0])
+		// 		httpMod.Memory().Write(uint32(results[0]), []byte(url))
 
-		for range 3 {
-			_, err = https.Call(ctx, results[0], uint64(len(url)))
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
+		// 		_, err = https.Call(ctx, results[0], uint64(len(url)))
+		// 		if err != nil {
+		// 			fmt.Println(err)
+		// 		}
+		// 	}()
+		// }
+
+		// time.Sleep(time.Second * 10)
+		httpMod.ExportedFunction("http_redirect").Call(context.Background())
 
 		httpMod.Close(context.Background())
 	} else if os.Args[1] == "ftp" {
@@ -192,6 +207,36 @@ func main() {
 		fmt.Println(mod.ExportedFunctionDefinitions())
 
 		_, err = mod.ExportedFunction("webdav_connect").Call(ctx)
+		if err != nil {
+			fmt.Println("call panic test")
+			fmt.Println(err)
+		}
+	} else if os.Args[1] == "localfile" {
+		panicWasm, err := os.ReadFile("localfile.wasm")
+		if err != nil {
+			log.Panicln(err)
+		}
+		cm, err := r.CompileModule(context.Background(), panicWasm)
+		if err != nil {
+			log.Panicln(err)
+		}
+		mod, err := r.InstantiateModule(ctx, cm, conf)
+		if err != nil {
+			log.Panicln(err)
+		}
+		fmt.Println(mod.ExportedFunctionDefinitions())
+		malloc := mod.ExportedFunction("malloc")
+		free := mod.ExportedFunction("free")
+
+		dir := os.Args[3]
+
+		results, err := malloc.Call(ctx, uint64(len(dir)))
+		if err != nil {
+			log.Panicln(err)
+		}
+		defer free.Call(ctx, results[0])
+		mod.Memory().Write(uint32(results[0]), []byte(dir))
+		_, err = mod.ExportedFunction("localfile").Call(ctx, results[0], uint64(len(dir)))
 		if err != nil {
 			fmt.Println("call panic test")
 			fmt.Println(err)
