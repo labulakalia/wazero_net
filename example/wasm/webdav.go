@@ -15,9 +15,7 @@ import (
 //go:wasmexport webdav_connect
 func webdav_connect() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
-
-	// log(fmt.Sprintf("ptr %d len %d", urlPtr, length))
-	client := gowebdav.NewClient("https://webdav-1825196416.pd1.123pan.cn/webdav", "15829013290", "ti3xtd01000da2hmkr8bz48a2q9owiqu")
+	client := gowebdav.NewClient("", "", "")
 	client.SetClientDo(http.DefaultClient.Do)
 	err := client.Connect()
 	if err != nil {
