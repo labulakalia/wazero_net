@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	_ "net/http/pprof"
+
 	"sync"
 	"time"
 
@@ -110,7 +110,7 @@ func (h *HostNet) conn_dial_tls(_ context.Context, m api.Module,
 	}
 
 	conn, err := tls.Dial(util.BytesToString(network), util.BytesToString(address), &tls.Config{
-		InsecureSkipVerify: true,
+		// InsecureSkipVerify: true,
 	})
 	if err != nil {
 		return util.HostErrorToUint64(m, err)

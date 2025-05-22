@@ -8,7 +8,6 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/labulakalia/wazero_net"
@@ -45,12 +44,12 @@ func main() {
 
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
 
-	fsPath := os.Args[2]
-	fmt.Println(fsPath)
-	fsConfig := wazero.NewFSConfig()
-	mountFs := `/` + strings.ReplaceAll(strings.ReplaceAll(fsPath, ":", ""), `\`, "/")
-	fsConfig = fsConfig.WithDirMount(fsPath, mountFs)
-	fmt.Println("mount fs", mountFs)
+	// fsPath := os.Args[2]
+	// fmt.Println(fsPath)
+	// fsConfig := wazero.NewFSConfig()
+	// mountFs := `/` + strings.ReplaceAll(strings.ReplaceAll(fsPath, ":", ""), `\`, "/")
+	// fsConfig = fsConfig.WithDirMount(fsPath, mountFs)
+	// fmt.Println("mount fs", mountFs)
 
 	conf := wazero.NewModuleConfig().WithStartFunctions("_initialize").
 		WithStdout(os.Stdout).
@@ -59,8 +58,8 @@ func main() {
 		WithRandSource(rand.Reader).
 		WithSysNanosleep().
 		WithSysNanotime().
-		WithSysWalltime().
-		WithFSConfig(fsConfig)
+		WithSysWalltime()
+		// WithFSConfig(fsConfig)
 
 	if os.Args[1] == "net" {
 		netWasm, err := os.ReadFile("net.wasm")

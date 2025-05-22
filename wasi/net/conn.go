@@ -21,11 +21,11 @@ func Dial(network, address string) (net.Conn, error) {
 	var id uint64
 	networkPtr := util.StringToPtr(&network)
 	addressPtr := util.StringToPtr(&address)
-	time.Sleep(0)
+
 	ret := conn_dial(networkPtr, uint64(len(network)),
 		addressPtr, uint64(len(address)),
 		util.Uint64ToPtr(&id))
-	time.Sleep(0)
+
 	if ret != 0 {
 		return nil, util.RetUint64ToError(ret)
 	}
@@ -72,7 +72,8 @@ reply:
 	err := util.RetUint64ToError(conn_read(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n)))
 	runtime.Gosched()
 	if err != nil {
-		if err.Error() == "EOF" {
+		slog.Error("read failed", "err", err, "n", n)
+		if err.Error() == io.EOF.Error() {
 			return int(n), io.EOF
 		} else {
 			if strings.Contains(err.Error(), "i/o timeout") {
@@ -83,6 +84,7 @@ reply:
 				slog.Debug("read err retry", "err", err)
 				goto reply
 			}
+
 			return 0, err
 		}
 	}
@@ -100,6 +102,7 @@ func (c *Conn) Write(b []byte) (int, error) {
 	var n uint64
 	bPtr := util.BytesToPtr(b)
 reply:
+	runtime.Gosched()
 	err := util.RetUint64ToError(conn_write(c.id, bPtr, uint64(len(b)), util.Uint64ToPtr(&n)))
 	runtime.Gosched()
 	if err != nil {

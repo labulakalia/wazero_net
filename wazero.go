@@ -26,5 +26,6 @@ func InitFuncExport(r wazero.Runtime) wazero.HostModuleBuilder {
 		NewFunctionBuilder().WithFunc(hostNet.listener_listen).Export("listener_listen").
 		NewFunctionBuilder().WithFunc(hostNet.listener_accept).Export("listener_accept").
 		NewFunctionBuilder().WithFunc(hostNet.listener_close).Export("listener_close").
-		NewFunctionBuilder().WithFunc(hostNet.listener_addr).Export("listener_addr")
+		NewFunctionBuilder().WithFunc(hostNet.listener_addr).Export("listener_addr").
+		NewFunctionBuilder().WithFunc(hostNet.client_do).Export("client_do")
 }

@@ -3,9 +3,9 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	_ "github.com/labulakalia/wazero_net/wasi/http"
 	"github.com/medianexapp/gowebdav"
@@ -14,20 +14,36 @@ import (
 
 //go:wasmexport webdav_connect
 func webdav_connect() {
-	// c := httpclient.NewClient()
+	slog.SetLogLoggerLevel(slog.LevelDebug)
+
 	// log(fmt.Sprintf("ptr %d len %d", urlPtr, length))
-	client := gowebdav.NewClient("http://192.168.123.29:5244/dav", "admin", "109097")
+	client := gowebdav.NewClient("https://webdav-1825196416.pd1.123pan.cn/webdav", "15829013290", "ti3xtd01000da2hmkr8bz48a2q9owiqu")
 	client.SetClientDo(http.DefaultClient.Do)
 	err := client.Connect()
 	if err != nil {
 		slog.Error("connect failed", "err", err)
-		// return err
+		return
 	}
-	req, err := client.GetPathRequest("/dav/tianyi/%E6%88%91%E7%9A%84%E8%A7%86%E9%A2%91/%E7%BB%9D%E5%AF%B9%E6%9D%83%E5%8A%9B%5B%E7%AE%80%E7%B9%81%E8%8B%B1%E5%AD%97%E5%B9%95%5D.Absolute.Power.1997.EUR.1080p.BluRay.x265.10bit.DTS-SONYHD/Absolute.Power.1997.EUR.1080p.BluRay.x265.10bit.DTS-SONYHD.mkv")
+	client.SetTimeout(time.Second * 30)
+	dirs, err := client.ReadDir("/")
+	if err != nil {
+		slog.Error("read dir failed", "err", err)
+		return
+	}
+	for _, dir := range dirs {
+		slog.Info("read dir", "dir", dir.Name())
+		if dir.IsDir() {
 
-	fmt.Println(err)
-	fmt.Println(req.Header)
-	fmt.Println(req.URL)
+			dirs, err := client.ReadDir("/" + dir.Name())
+			if err != nil {
+				slog.Error("read dir failed", "err", err)
+				return
+			}
+			for _, dir := range dirs {
+				slog.Info("read dir", "dir", dir.Name())
+			}
+		}
+	}
 }
 
 func main() {}
