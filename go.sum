@@ -1,3 +1,7 @@
+github.com/aperturerobotics/json-iterator-lite v1.0.0 h1:cihbrYWoK/S2RYXhJLpDZd+GUjVvFJN+D3w1VOqqHRI=
+github.com/aperturerobotics/json-iterator-lite v1.0.0/go.mod h1:snaApCEDtrHHP6UWSLKiYNOZU9A5NyzccKenx9oZEzg=
+github.com/aperturerobotics/protobuf-go-lite v0.11.0 h1:IAaZISqrEpodqECYxk0yKWgROEbZtMhs7bErP+Zma9o=
+github.com/aperturerobotics/protobuf-go-lite v0.11.0/go.mod h1:c4kGy7Dkfz6B1m0t4QBIMQoNeQ7m+nYj3Qxxnlwhygo=
 github.com/cloudsoda/sddl v0.0.0-20250224235906-926454e91efc h1:0xCWmFKBmarCqqqLeM7jFBSw/Or81UEElFqO8MY+GDs=
 github.com/cloudsoda/sddl v0.0.0-20250224235906-926454e91efc/go.mod h1:uvR42Hb/t52HQd7x5/ZLzZEK8oihrFpgnodIJ1vte2E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -36,6 +40,8 @@ github.com/medianexapp/go-smb2 v0.0.0-20250425112922-92edacdefca5 h1:rPMPOK4foIu
 github.com/medianexapp/go-smb2 v0.0.0-20250425112922-92edacdefca5/go.mod h1:j1QjZnoXKXrjkAOXeeWekE6ymSdCxWCHP4s4sF9PqPw=
 github.com/medianexapp/gowebdav v0.0.0-20250425112725-41a667437dfa h1:kKNtHeFLc8JRMc/Jol041krGY4JffYAWmGPzY8yZd5s=
 github.com/medianexapp/gowebdav v0.0.0-20250425112725-41a667437dfa/go.mod h1:UIu++AGXNUdvdqC2u746o78TGTmeG03n1TNPfLoLe6k=
+github.com/medianexapp/plugin_api v0.0.25-0.20251015132759-5bdd0a7449f8 h1:AzR7B2zMrIw7vjDkKyqOy5TYsNHrD7si53qUDMR9EJc=
+github.com/medianexapp/plugin_api v0.0.25-0.20251015132759-5bdd0a7449f8/go.mod h1:d+ioMKd/TYZl7axXX0PYM/2Ox1oyScIIvFrW/L6ymwQ=
 github.com/medianexapp/sftp v1.13.10-0.20250425113120-4ffdd4c8163a h1:a1AMBh4Glxjl8gb9JW1kJ1W92cgBBkLlnZHCOAPBjQg=
 github.com/medianexapp/sftp v1.13.10-0.20250425113120-4ffdd4c8163a/go.mod h1:BhBMCAsN8EaWmFxpa/Au+jX8fG8CLFKXs8LOjksAFH0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

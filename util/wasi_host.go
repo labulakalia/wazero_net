@@ -25,8 +25,8 @@ func HostWriteBytes(m api.Module, data []byte) (uint64, error) {
 
 	result, err := malloc.Call(ctx, uint64(len(data)))
 	if err != nil {
-		slog.Info("malloc mem failed", "count", len(data), "error", err)
-		return 0, fmt.Errorf("malloc mem failed count:%d", len(data))
+		slog.Info("malloc call failed", "count", len(data), "error", err)
+		return 0, fmt.Errorf("malloc call failed %w", err)
 	}
 	dataPtr := result[0]
 

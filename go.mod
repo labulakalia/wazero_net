@@ -12,6 +12,8 @@ require (
 )
 
 require (
+	github.com/aperturerobotics/json-iterator-lite v1.0.0 // indirect
+	github.com/aperturerobotics/protobuf-go-lite v0.11.0 // indirect
 	github.com/cloudsoda/sddl v0.0.0-20250224235906-926454e91efc // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
@@ -25,6 +27,7 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/medianexapp/gowebdav v0.0.0-20250425112725-41a667437dfa // indirect
+	github.com/medianexapp/plugin_api v0.0.25-0.20251015132759-5bdd0a7449f8 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
 	tinygo.org/x/drivers v0.31.0 // indirect

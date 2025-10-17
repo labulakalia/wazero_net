@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/labulakalia/wazero_net/util"
 )
 
 // re impl this interface
-func Do(req *http.Request) (*http.Response, error) {
+func Do(req *http.Request, timeout time.Duration) (*http.Response, error) {
 	modelReq, err := util.ToModelRequest(req)
 	if err != nil {
 		slog.Error("to model request failed", "err", err)
@@ -28,7 +29,7 @@ func Do(req *http.Request) (*http.Response, error) {
 		respPtr uint64
 		respLen uint64
 	)
-	ret := client_do(util.BytesToPtr(reqData), uint64(reqDataLen), util.Uint64ToPtr(&respPtr), util.Uint64ToPtr(&respLen))
+	ret := client_do(util.BytesToPtr(reqData), uint64(reqDataLen), util.Uint64ToPtr(&respPtr), util.Uint64ToPtr(&respLen), uint64(timeout))
 	if ret != 0 {
 		return nil, util.RetUint64ToError(ret)
 	}

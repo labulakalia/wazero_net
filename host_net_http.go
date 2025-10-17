@@ -4,14 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/labulakalia/wazero_net/util"
 	"github.com/tetratelabs/wazero/api"
 )
 
 func (h *HostNet) client_do(_ context.Context, m api.Module,
-	reqPtr, reqLen, respPtr, respLenPtr uint64) uint64 {
+	reqPtr, reqLen, respPtr, respLenPtr, timeout uint64) uint64 {
 	reqBytes, err := util.HostReadBytes(m, uint32(reqPtr), uint32(reqLen))
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
@@ -21,7 +23,8 @@ func (h *HostNet) client_do(_ context.Context, m api.Module,
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
-
+	slog.Info("start client do", "url", req.URL, "timeout", timeout)
+	http.DefaultClient.Timeout = time.Duration(timeout)
 	resp, err := http.DefaultClient.Do(util.ToHttpRequest(req))
 	if err != nil {
 		return util.HostErrorToUint64(m, err)

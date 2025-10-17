@@ -8,7 +8,6 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/labulakalia/wazero_net"
 	"github.com/tetratelabs/wazero"
@@ -17,8 +16,6 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
 
 	// // add wasm cache
 	cacheDir := os.TempDir()
@@ -31,7 +28,7 @@ func main() {
 	features := api.CoreFeaturesV2.SetEnabled(api.CoreFeatureMutableGlobal, false)
 	rConfig := wazero.NewRuntimeConfigCompiler().
 		WithCompilationCache(cache).WithDebugInfoEnabled(true).WithCloseOnContextDone(true).WithCoreFeatures(features)
-
+	ctx := context.Background()
 	r := wazero.NewRuntimeWithConfig(ctx, rConfig)
 	// defer r.Close(ctx)
 	// r := wazero.NewRuntime(ctx)
@@ -91,30 +88,23 @@ func main() {
 		if err != nil {
 			log.Panicln(err)
 		}
-		// malloc := httpMod.ExportedFunction("malloc")
-		// free := httpMod.ExportedFunction("free")
-		// for i := range 1 {
-		// 	go func() {
-		// 		fmt.Println("call", "https_get"+fmt.Sprint(i+1))
-		// 		https := httpMod.ExportedFunction("https_get" + fmt.Sprint(i+1))
+		malloc := httpMod.ExportedFunction("malloc")
+		free := httpMod.ExportedFunction("free")
 
-		// 		url := "https://whoami.medianex.app"
-		// 		results, err := malloc.Call(ctx, uint64(len(url)))
-		// 		if err != nil {
-		// 			log.Panicln(err)
-		// 		}
-		// 		defer free.Call(ctx, results[0])
-		// 		httpMod.Memory().Write(uint32(results[0]), []byte(url))
+		https := httpMod.ExportedFunction("https_get")
 
-		// 		_, err = https.Call(ctx, results[0], uint64(len(url)))
-		// 		if err != nil {
-		// 			fmt.Println(err)
-		// 		}
-		// 	}()
-		// }
+		url := "https://www.google.com"
+		results, err := malloc.Call(ctx, uint64(len(url)))
+		if err != nil {
+			log.Panicln(err)
+		}
+		defer free.Call(ctx, results[0])
+		httpMod.Memory().Write(uint32(results[0]), []byte(url))
 
-		// time.Sleep(time.Second * 10)
-		httpMod.ExportedFunction("http_redirect").Call(context.Background())
+		_, err = https.Call(ctx, results[0], uint64(len(url)))
+		if err != nil {
+			fmt.Println(err)
+		}
 
 		httpMod.Close(context.Background())
 	} else if os.Args[1] == "ftp" {
