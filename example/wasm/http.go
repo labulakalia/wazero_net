@@ -8,9 +8,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/labulakalia/wazero_net/httpclient"
 	"github.com/labulakalia/wazero_net/util"
 	_ "github.com/labulakalia/wazero_net/wasi/http"
+	"github.com/medianexapp/plugin_api/httpclient"
 )
 
 //go:wasmexport https_get

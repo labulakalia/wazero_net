@@ -9,7 +9,6 @@ import (
 
 	_ "github.com/labulakalia/wazero_net/wasi/http"
 	"github.com/medianexapp/gowebdav"
-	// "github.com/medianexapp/plugin_api/httpclient"
 )
 
 //go:wasmexport webdav_connect

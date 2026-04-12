@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 
-	_ "github.com/labulakalia/wazero_net/wasi/malloc"
 	wasi_net "github.com/labulakalia/wazero_net/wasi/net"
 	"github.com/medianexapp/go-smb2"
 )
