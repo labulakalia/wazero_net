@@ -1,12 +1,12 @@
 module github.com/labulakalia/wazero_net
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/medianexapp/go-smb2 v0.0.0-20250425112922-92edacdefca5
 	github.com/medianexapp/gowebdav v0.0.0-20250425112725-41a667437dfa
-	github.com/medianexapp/plugin_api v0.0.25-0.20260412023512-97f31f7f0e97
+	github.com/medianexapp/plugin_api v0.0.25-0.20260412033209-4c61ac7c7a5b
 	github.com/medianexapp/sftp v1.13.10-0.20250425113120-4ffdd4c8163a
 	github.com/tetratelabs/wazero v1.11.0
 	golang.org/x/crypto v0.37.0
@@ -27,5 +27,5 @@ require (
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
 )
