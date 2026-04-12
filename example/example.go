@@ -93,7 +93,7 @@ func main() {
 
 		https := httpMod.ExportedFunction("https_get")
 
-		url := "https://www.google.com"
+		url := "http://127.0.0.1:19971"
 		results, err := malloc.Call(ctx, uint64(len(url)))
 		if err != nil {
 			log.Panicln(err)

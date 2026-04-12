@@ -17,7 +17,7 @@ import (
 func https_get(urlPtr, length uint64) {
 	geturl := util.PtrToString(uint32(urlPtr), uint32(length))
 	slog.Info("start http get", "url", geturl)
-	client := httpclient.NewClient(httpclient.WithTimeout(time.Second * 60))
+	client := httpclient.NewClient(httpclient.WithTimeout(time.Second * 3))
 	resp, err := client.Get(geturl)
 	if err != nil {
 		slog.Error("client get failed", "err", err)
