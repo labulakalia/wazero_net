@@ -1,3 +1,3 @@
-//go:build wasip1
+//go:build !wasip1
 
 package http

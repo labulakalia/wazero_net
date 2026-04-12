@@ -11,6 +11,20 @@ import (
 	"github.com/labulakalia/wazero_net/util"
 )
 
+func init() {
+	http.DefaultTransport = &Transport{}
+	http.DefaultClient.Transport = &Transport{}
+}
+
+type Transport struct {
+	timeout time.Duration
+}
+
+func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	defaultTimeout := http.DefaultClient.Timeout
+	return Do(req, defaultTimeout)
+}
+
 // re impl this interface
 func Do(req *http.Request, timeout time.Duration) (*http.Response, error) {
 	modelReq, err := util.ToModelRequest(req)
