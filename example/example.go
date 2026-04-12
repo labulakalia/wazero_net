@@ -8,6 +8,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/labulakalia/wazero_net"
 	"github.com/tetratelabs/wazero"
@@ -67,12 +68,15 @@ func main() {
 		if err != nil {
 			log.Panicln(err)
 		}
+
 		netMod, err := r.InstantiateModule(ctx, cm, conf)
 		if err != nil {
 			log.Panicln(err)
 		}
+
 		netMod.ExportedFunction("dial").Call(context.Background())
 		// netMod.ExportedFunction("dial").Call(context.Background())
+
 	} else if os.Args[1] == "http" {
 		netWasm, err := os.ReadFile("http.wasm")
 		if err != nil {
@@ -92,7 +96,7 @@ func main() {
 		free := httpMod.ExportedFunction("free")
 
 		https := httpMod.ExportedFunction("https_get")
-
+		s := time.Now()
 		url := "http://baidu.com"
 		results, err := malloc.Call(ctx, uint64(len(url)))
 		if err != nil {
@@ -105,7 +109,7 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 		}
-
+		fmt.Println(time.Now().Sub(s))
 		httpMod.Close(context.Background())
 	} else if os.Args[1] == "ftp" {
 		ftpWasm, err := os.ReadFile("ftp.wasm")
