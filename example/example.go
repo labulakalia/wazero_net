@@ -56,8 +56,8 @@ func main() {
 		WithRandSource(rand.Reader).
 		WithSysNanosleep().
 		WithSysNanotime().
-		WithSysWalltime()
-		// WithFSConfig(fsConfig)
+		WithSysWalltime().WithEnv("testenv", "envvalue")
+	// WithFSConfig(fsConfig)
 
 	if os.Args[1] == "net" {
 		netWasm, err := os.ReadFile("net.wasm")
@@ -69,12 +69,30 @@ func main() {
 			log.Panicln(err)
 		}
 
+		fmt.Printf("cm %+v\n", cm)
 		netMod, err := r.InstantiateModule(ctx, cm, conf)
 		if err != nil {
 			log.Panicln(err)
 		}
-
+		fmt.Printf("dial %p\n", netMod)
 		netMod.ExportedFunction("dial").Call(context.Background())
+
+		conf2 := wazero.NewModuleConfig().WithStartFunctions("_initialize").
+			WithStdout(os.Stdout).
+			WithStderr(os.Stderr).
+			WithStdin(os.Stdin).
+			WithRandSource(rand.Reader).
+			WithSysNanosleep().
+			WithSysNanotime().
+			WithSysWalltime().WithName("main2")
+
+		netMod2, err := r.InstantiateModule(ctx, cm, conf2)
+		if err != nil {
+			log.Panicln(err)
+		}
+		fmt.Printf("dial %p\n", netMod2)
+		nCtx := context.WithValue(ctx, "test", "value1111")
+		netMod2.ExportedFunction("dial").Call(nCtx)
 		// netMod.ExportedFunction("dial").Call(context.Background())
 
 	} else if os.Args[1] == "http" {
@@ -82,7 +100,6 @@ func main() {
 		if err != nil {
 			log.Panicln(err)
 		}
-
 		cm, err := r.CompileModule(context.Background(), netWasm)
 		if err != nil {
 			log.Panicln(err)
@@ -92,12 +109,13 @@ func main() {
 		if err != nil {
 			log.Panicln(err)
 		}
+		fmt.Printf("InstantiateModule11 %p\n", httpMod)
 		malloc := httpMod.ExportedFunction("malloc")
 		free := httpMod.ExportedFunction("free")
 
 		https := httpMod.ExportedFunction("https_get")
 		s := time.Now()
-		url := "http://baidu.com"
+		url := "http://www.google.com"
 		results, err := malloc.Call(ctx, uint64(len(url)))
 		if err != nil {
 			log.Panicln(err)
@@ -109,7 +127,7 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println(time.Now().Sub(s))
+		fmt.Println(time.Since(s))
 		httpMod.Close(context.Background())
 	} else if os.Args[1] == "ftp" {
 		ftpWasm, err := os.ReadFile("ftp.wasm")

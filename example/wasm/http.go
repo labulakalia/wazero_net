@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/labulakalia/wazero_net/util"
@@ -31,6 +32,8 @@ func https_get(urlPtr, length uint64) {
 		return
 	}
 	fmt.Println("resp body\n", string(respData))
+	fmt.Println("os env", os.Getenv("testenv"))
+	fmt.Println(os.Environ())
 }
 
 func main() {}

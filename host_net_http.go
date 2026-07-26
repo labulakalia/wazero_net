@@ -3,29 +3,32 @@ package wazero_net
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
-	"net/http"
 	"time"
 
 	"github.com/labulakalia/wazero_net/util"
+	"github.com/medianexapp/plugin_api/httpclient"
 	"github.com/tetratelabs/wazero/api"
 )
 
-func (h *HostNet) client_do(_ context.Context, m api.Module,
+func (h *HostNet) client_do(ctx context.Context, m api.Module,
 	reqPtr, reqLen, respPtr, respLenPtr, timeout uint64) uint64 {
 	reqBytes, err := util.HostReadBytes(m, uint32(reqPtr), uint32(reqLen))
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
+	fmt.Printf("client do %p\n", m)
+	slog.Info("client_do", "m", m)
 	req := &util.Request{}
 	err = json.Unmarshal(reqBytes, req)
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
 	slog.Info("start client do", "url", req.URL, "timeout", timeout)
-	http.DefaultClient.Timeout = time.Duration(timeout)
-	resp, err := http.DefaultClient.Do(util.ToHttpRequest(req))
+	resp, err := httpclient.NewBuilder().AutoProxy().SetRequest(util.ToHttpRequest(req)).
+		SetTimeout(time.Duration(timeout)).RawResponse()
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}

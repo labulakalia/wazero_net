@@ -70,12 +70,14 @@ func (h *HostNet) getListner(listenerId uint64) (net.Listener, error) {
 	return listener, nil
 }
 
-func (h *HostNet) conn_dial(_ context.Context, m api.Module,
+func (h *HostNet) conn_dial(ctx context.Context, m api.Module,
 	networkPtr, networkLen, addressPtr, addressLen, connIdPtr uint64) uint64 {
 	network, err := util.HostReadBytes(m, uint32(networkPtr), uint32(networkLen))
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
 	}
+	fmt.Printf("dial %p\n", m)
+	fmt.Println("context", ctx.Value("test"))
 	address, err := util.HostReadBytes(m, uint32(addressPtr), uint32(addressLen))
 	if err != nil {
 		return util.HostErrorToUint64(m, err)
